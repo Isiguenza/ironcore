@@ -120,13 +120,13 @@ struct RoutineBuilderView: View {
                     }
                 }
             }
-.sheet(isPresented: $showExerciseLibrary, onDismiss: {
-                if selectedExercise != nil {
-                    showAddExercise = true
-                }
-            }) {
+            .sheet(isPresented: $showExerciseLibrary) {
                 ExerciseLibraryView(workoutViewModel: workoutViewModel) { exercise in
                     selectedExercise = exercise
+                    showExerciseLibrary = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showAddExercise = true
+                    }
                 }
             }
             .sheet(isPresented: $showAddExercise, onDismiss: {

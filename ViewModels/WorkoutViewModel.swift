@@ -19,7 +19,21 @@ class WorkoutViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            routines = try await dataAPI.get(table: "routines", query: ["user_id": "eq.\(userId)"])
+            var loadedRoutines: [Routine] = try await dataAPI.get(table: "routines", query: ["user_id": "eq.\(userId)"])
+            
+            for i in 0..<loadedRoutines.count {
+                let routineExercises: [RoutineExercise] = try await dataAPI.get(
+                    table: "routine_exercises",
+                    query: [
+                        "routine_id": "eq.\(loadedRoutines[i].id)",
+                        "order": "exercise_order.asc"
+                    ]
+                )
+                loadedRoutines[i].exercises = routineExercises
+                print("✅ [WORKOUT] Loaded \(routineExercises.count) exercises for routine: \(loadedRoutines[i].name)")
+            }
+            
+            routines = loadedRoutines
             print("✅ [WORKOUT] Loaded \(routines.count) routines")
         } catch {
             errorMessage = error.localizedDescription
