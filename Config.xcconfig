@@ -1,0 +1,11 @@
+//
+//  Config.xcconfig
+//  Iron Core
+//
+//  Created by Iñaki Sigüenza on 27/01/26.
+//
+
+
+NEON_DATA_API_URL = https:/$()/ep-soft-frost-ah5hpy9a.apirest.c-3.us-east-1.aws.neon.tech/neondb/rest/v1
+
+NEON_AUTH_URL = https:/$()/ep-soft-frost-ah5hpy9a.neonauth.c-3.us-east-1.aws.neon.tech/neondb
