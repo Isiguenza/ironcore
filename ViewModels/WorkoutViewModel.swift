@@ -112,10 +112,8 @@ class WorkoutViewModel: ObservableObject {
         workout.exercises.append(workoutExercise)
     }
     
-    func completeSet(exerciseIndex: Int, weight: Double, reps: Int, setType: SetType = .working, rpe: Int? = nil) {
+    func completeSet(exerciseIndex: Int, setNumber: Int, weight: Double, reps: Int, setType: SetType = .working, rpe: Int? = nil) {
         guard var workout = activeWorkout else { return }
-        
-        let setNumber = workout.exercises[exerciseIndex].completedSets.count + 1
         
         let set = CompletedSet(
             setNumber: setNumber,
@@ -129,7 +127,18 @@ class WorkoutViewModel: ObservableObject {
         workout.exercises[exerciseIndex].completedSets.append(set)
         activeWorkout = workout
         
-        print("✅ [WORKOUT] Set completed: \(weight)kg x \(reps) reps")
+        print("✅ [WORKOUT] Set \(setNumber) completed: \(weight)kg x \(reps) reps")
+    }
+    
+    func uncompleteSet(exerciseIndex: Int, setNumber: Int) {
+        guard var workout = activeWorkout else { return }
+        guard exerciseIndex < workout.exercises.count else { return }
+        
+        if let setIndex = workout.exercises[exerciseIndex].completedSets.firstIndex(where: { $0.setNumber == setNumber }) {
+            workout.exercises[exerciseIndex].completedSets.remove(at: setIndex)
+            activeWorkout = workout
+            print("↩️ [WORKOUT] Set \(setNumber) unmarked")
+        }
     }
     
     func finishWorkout() async {

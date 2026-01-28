@@ -13,7 +13,6 @@ struct ActiveWorkoutView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     headerSection
@@ -49,9 +48,7 @@ struct ActiveWorkoutView: View {
                         .padding(.vertical)
                     }
                     
-                    if isResting {
-                        restTimerSection
-                    }
+                    
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -81,6 +78,15 @@ struct ActiveWorkoutView: View {
                 Text("Are you sure you want to finish this workout?")
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            if isResting {
+                restTimerSection
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy, value: isResting)
         .onAppear {
             startWorkoutTimer()
         }
@@ -122,37 +128,48 @@ struct ActiveWorkoutView: View {
             Text("REST TIME")
                 .font(.system(size: 12, weight: .bold))
                 .foregroundColor(.gray)
-            
+
             HStack(spacing: 20) {
                 Button(action: { restTimer = max(0, restTimer - 15) }) {
-                    Image(systemName: "minus.circle")
-                        .font(.system(size: 32))
-                        .foregroundColor(.neonGreen)
+                    HStack(spacing: 0){
+                        Image(systemName: "minus")
+                        .font(.system(size: 14))
+                        Text("15")
+                        .font(.system(size: 18))
+                    }
+                    
+                    .foregroundColor(.neonGreen)
                 }
-                
+
                 Text(formatTime(restTimer))
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(restTimer <= 10 ? .red : .green)
+                    .font(.system(size: 46, weight: .bold))
+                    .foregroundColor(restTimer <= 10 ? .red : .white)
                     .monospacedDigit()
-                
+
                 Button(action: { restTimer += 15 }) {
-                    Image(systemName: "plus.circle")
-                        .font(.system(size: 32))
+                    HStack(spacing: 0){
+                        Image(systemName: "plus")
+                            .font(.system(size: 14))
+                        Text("15")
+                            .font(.system(size: 18))
+                    }
                         .foregroundColor(.neonGreen)
                 }
             }
-            
+
             Button(action: {
                 isResting = false
                 restTimer = 0
             }) {
                 Text("Skip Rest")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray)
+                    .foregroundColor(.neonGreen)
             }
         }
         .padding()
-        .background(Color(white: 0.05))
+        .padding(.horizontal, 40)// ✅ padding “dentro” del card
+        .glassEffect(in: RoundedRectangle(cornerRadius: 15))
+        .padding(.bottom, 12) // ✅ poco padding afuera (solo separación)
     }
     
     private func startWorkoutTimer() {
@@ -247,7 +264,7 @@ struct ExerciseCard: View {
                     SetRow(
                         setNumber: index + 1,
                         input: binding(for: index),
-                        isCompleted: index < exercise.completedSets.count,
+                        isCompleted: exercise.completedSets.contains(where: { $0.setNumber == index + 1 }),
                         onComplete: {
                             completeSet(at: index)
                         }
@@ -266,7 +283,6 @@ struct ExerciseCard: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color(white: 0.05)))
         .padding(.horizontal)
         .onAppear {
             initializeSetInputs()
@@ -290,7 +306,8 @@ struct ExerciseCard: View {
     }
     
     private func initializeSetInputs() {
-        setInputs = [SetInput(reps: "8", weight: "20.0")]
+        let count = max(1, exercise.targetSets)
+        setInputs = (0..<count).map { _ in SetInput(reps: "8", weight: "20.0") }
     }
     
     private func addSet() {
@@ -299,15 +316,23 @@ struct ExerciseCard: View {
     
     private func completeSet(at index: Int) {
         guard index < setInputs.count else { return }
-        let input = setInputs[index]
         
-        if let reps = Int(input.reps), let weight = Double(input.weight) {
-            workoutViewModel.completeSet(
-                exerciseIndex: exerciseIndex,
-                weight: weight,
-                reps: reps
-            )
-            onSetComplete()
+        let setNumber = index + 1
+        let isCurrentlyCompleted = exercise.completedSets.contains(where: { $0.setNumber == setNumber })
+        
+        if isCurrentlyCompleted {
+            workoutViewModel.uncompleteSet(exerciseIndex: exerciseIndex, setNumber: setNumber)
+        } else {
+            let input = setInputs[index]
+            if let reps = Int(input.reps), let weight = Double(input.weight) {
+                workoutViewModel.completeSet(
+                    exerciseIndex: exerciseIndex,
+                    setNumber: setNumber,
+                    weight: weight,
+                    reps: reps
+                )
+                onSetComplete()
+            }
         }
     }
 }
@@ -339,7 +364,6 @@ struct SetRow: View {
                 .frame(maxWidth: .infinity)
                 .background(Color(white: 0.1))
                 .cornerRadius(8)
-                .disabled(isCompleted)
             
             TextField("12.00", text: $input.weight)
                 .keyboardType(.decimalPad)
@@ -350,14 +374,12 @@ struct SetRow: View {
                 .frame(maxWidth: .infinity)
                 .background(Color(white: 0.1))
                 .cornerRadius(8)
-                .disabled(isCompleted)
             
             Button(action: onComplete) {
                 Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 28))
+                    .font(.system(size: 22))
                     .foregroundColor(isCompleted ? .green : .gray)
             }
-            .disabled(isCompleted)
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
