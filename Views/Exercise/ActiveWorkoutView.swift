@@ -9,6 +9,7 @@ struct ActiveWorkoutView: View {
     @State private var isResting = false
     @State private var showExerciseLibrary = false
     @State private var showFinishConfirmation = false
+    @State private var showDiscardConfirmation = false
     @State private var showEditWorkoutTime = false
     @State private var showCustomWorkoutTime = false
     @State private var customWorkoutTimeInput = ""
@@ -56,6 +57,21 @@ struct ActiveWorkoutView: View {
                             }
                             .padding(.horizontal)
                             .padding(.top, 8)
+                            
+                            Button(action: { showDiscardConfirmation = true }) {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 22))
+                                    Text("Discard Workout")
+                                        .font(.system(size: 17, weight: .semibold))
+                                }
+                                .foregroundColor(.red)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(RoundedRectangle(cornerRadius: 14).fill(Color(white: 0.15)))
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
                         }
                         .padding(.vertical)
                     }
@@ -88,6 +104,15 @@ struct ActiveWorkoutView: View {
                 }
             } message: {
                 Text("Are you sure you want to finish this workout?")
+            }
+            .alert("Discard Workout", isPresented: $showDiscardConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Discard", role: .destructive) {
+                    workoutViewModel.activeWorkout = nil
+                    dismiss()
+                }
+            } message: {
+                Text("Are you sure you want to discard this workout? All progress will be lost.")
             }
             .safeAreaInset(edge: .bottom) {
             if isResting {
@@ -308,7 +333,12 @@ struct ExerciseCard: View {
                     Text("SET")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.gray)
-                        .frame(width: 50)
+                        .frame(width: 40)
+                    
+                    Text("LAST")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.gray)
+                        .frame(width: 60)
                     
                     Text("REPS")
                         .font(.system(size: 12, weight: .bold))
@@ -338,7 +368,8 @@ struct ExerciseCard: View {
                         isCompleted: exercise.completedSets.contains(where: { $0.setNumber == index + 1 }),
                         onComplete: {
                             completeSet(at: index)
-                        }
+                        },
+                        lastWeight: "-"
                     )
                 }
                 
@@ -450,13 +481,19 @@ struct SetRow: View {
     @Binding var input: SetInput
     let isCompleted: Bool
     let onComplete: () -> Void
+    let lastWeight: String
     
     var body: some View {
         HStack {
             Text("\(setNumber)")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.white)
-                .frame(width: 50)
+                .frame(width: 40)
+            
+            Text(lastWeight)
+                .font(.system(size: 14))
+                .foregroundColor(.gray)
+                .frame(width: 60)
             
             TextField("-", text: $input.reps)
                 .keyboardType(.numberPad)
