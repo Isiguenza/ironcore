@@ -124,7 +124,11 @@ struct RoutineBuilderView: View {
                 ExerciseLibraryView(workoutViewModel: workoutViewModel) { exercise in
                     selectedExercise = exercise
                     showExerciseLibrary = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                }
+            }
+            .onChange(of: showExerciseLibrary) { isShowing in
+                if !isShowing && selectedExercise != nil {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         showAddExercise = true
                     }
                 }

@@ -77,15 +77,28 @@ class WorkoutViewModel: ObservableObject {
     func startWorkout(routine: Routine? = nil) {
         guard let userId = KeychainStore.shared.getUserId() else { return }
         
+        var workoutExercises: [ActiveWorkoutExercise] = []
+        
+        if let routine = routine {
+            workoutExercises = routine.exercises.map { routineExercise in
+                ActiveWorkoutExercise(
+                    exerciseId: routineExercise.exerciseId,
+                    exerciseName: routineExercise.exerciseName,
+                    targetSets: routineExercise.targetSets,
+                    completedSets: []
+                )
+            }
+        }
+        
         activeWorkout = ActiveWorkout(
             userId: userId,
             routineId: routine?.id,
             routineName: routine?.name,
             startTime: Date(),
-            exercises: []
+            exercises: workoutExercises
         )
         
-        print("🏋️ [WORKOUT] Started workout: \(routine?.name ?? "Empty Workout")")
+        print("🏋️ [WORKOUT] Started workout: \(routine?.name ?? "Empty Workout") with \(workoutExercises.count) exercises")
     }
     
     func addExercise(to workout: inout ActiveWorkout, exercise: Exercise, targetSets: Int = 3) {
