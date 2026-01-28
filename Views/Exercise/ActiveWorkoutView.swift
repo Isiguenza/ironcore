@@ -25,7 +25,7 @@ struct ActiveWorkoutView: View {
                 VStack(spacing: 0) {
                     headerSection
                     
-                    ScrollView {
+                    ScrollView(showsIndicators: false){
                         VStack(spacing: 16) {
                             if let workout = workoutViewModel.activeWorkout {
                                 ForEach(Array(workout.exercises.enumerated()), id: \.offset) { index, exercise in
@@ -33,7 +33,11 @@ struct ActiveWorkoutView: View {
                                         exercise: exercise,
                                         exerciseIndex: index,
                                         workoutViewModel: workoutViewModel,
-                                        onSetComplete: { startRestTimer() }
+                                        onSetComplete: { 
+                                            if exercise.restSeconds > 0 {
+                                                startRestTimer(duration: exercise.restSeconds)
+                                            }
+                                        }
                                     )
                                 }
                             }
@@ -216,15 +220,22 @@ struct ActiveWorkoutView: View {
         }
     }
     
-    private func startRestTimer() {
-        restTimer = 90
+    private func startRestTimer(duration: Int = 90) {
+        restTimer = duration
         isResting = true
     }
     
     private func formatTime(_ seconds: Int) -> String {
-        let minutes = seconds / 60
+        let totalMinutes = seconds / 60
         let secs = seconds % 60
-        return String(format: "%02d:%02d", minutes, secs)
+        
+        if totalMinutes >= 60 {
+            let hours = totalMinutes / 60
+            let mins = totalMinutes % 60
+            return String(format: "%02d:%02d:%02d", hours, mins, secs)
+        } else {
+            return String(format: "%02d:%02d", totalMinutes, secs)
+        }
     }
     
     private func addExerciseToWorkout(_ exercise: Exercise) {
@@ -246,6 +257,7 @@ struct ExerciseCard: View {
     @State private var setInputs: [SetInput] = []
     @State private var weightUnit: WeightUnit = .lbs
     @State private var showUnitPicker = false
+    @State private var showRestTimePicker = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -261,6 +273,22 @@ struct ExerciseCard: View {
                 }
                 
                 Spacer()
+                
+                HStack {
+                    Image(systemName: "timer")
+                        .font(.system(size: 11))
+                        .foregroundColor(.gray)
+                    
+                    Button(action: { showRestTimePicker = true }) {
+                        Text(exercise.restSeconds == 0 ? "Rest: OFF" : "Rest: \(formatRestTime(exercise.restSeconds))")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.neonGreen)
+                    }
+                    
+                }
+                .padding(.horizontal)
+                
+               
                 
                 Menu {
                     Button(role: .destructive) {
@@ -297,7 +325,10 @@ struct ExerciseCard: View {
                     Spacer()
                         .frame(width: 44)
                 }
-                .padding(.horizontal)
+                
+                
+                
+                
                 .padding(.vertical, 8)
                 
                 ForEach(0..<setInputs.count, id: \.self) { index in
@@ -323,14 +354,26 @@ struct ExerciseCard: View {
             }
         }
         .padding()
-        .padding(.horizontal)
-        .onAppear {
-            initializeSetInputs()
-        }
         .sheet(isPresented: $showUnitPicker) {
             WeightUnitPicker(selectedUnit: $weightUnit)
                 .presentationDetents([.height(200)])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showRestTimePicker) {
+            RestTimePicker(restSeconds: Binding(
+                get: { exercise.restSeconds },
+                set: { newValue in
+                    if var workout = workoutViewModel.activeWorkout {
+                        workout.exercises[exerciseIndex].restSeconds = newValue
+                        workoutViewModel.activeWorkout = workout
+                    }
+                }
+            ))
+            .presentationDetents([.height(400)])
+            .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            initializeSetInputs()
         }
     }
     
@@ -381,6 +424,20 @@ struct ExerciseCard: View {
             onSetComplete()
         }
     }
+    
+    private func formatRestTime(_ seconds: Int) -> String {
+        if seconds < 60 {
+            return "\(seconds)s"
+        } else {
+            let mins = seconds / 60
+            let secs = seconds % 60
+            if secs == 0 {
+                return "\(mins) min"
+            } else {
+                return "\(mins)m \(secs)s"
+            }
+        }
+    }
 }
 
 struct SetInput {
@@ -427,7 +484,7 @@ struct SetRow: View {
                     .foregroundColor(isCompleted ? .green : .gray)
             }
         }
-        .padding(.horizontal, 24)
+        
         .padding(.vertical, 4)
     }
 }
@@ -496,69 +553,54 @@ struct WorkoutTimePicker: View {
     @Binding var elapsedTime: Int
     @Binding var showCustom: Bool
     @Environment(\.dismiss) var dismiss
-    @State private var selectedSeconds = 0
+    @State private var selectedMinutes = 0
     
     let timeOptions: [Int] = {
-        var options: [Int] = []
-        // 15 segundos hasta 4 horas (240 minutos = 14,400 segundos)
-        // Incrementos de 15 segundos
-        for seconds in stride(from: 15, through: 240, by: 15) {
-            options.append(seconds)
+        var options: [Int] = [-1] // -1 = Custom
+        // 1 a 30 minutos, incrementos de 1
+        for minutes in stride(from: 1, through: 30, by: 1) {
+            options.append(minutes)
         }
-        // Después de 4 minutos (240s), incrementos de 30 segundos hasta 10 minutos
-        for seconds in stride(from: 270, through: 600, by: 30) {
-            options.append(seconds)
+        // 35 a 60 minutos, incrementos de 5
+        for minutes in stride(from: 35, through: 60, by: 5) {
+            options.append(minutes)
         }
-        // Después de 10 minutos, incrementos de 1 minuto hasta 30 minutos
-        for minutes in stride(from: 11, through: 30, by: 1) {
-            options.append(minutes * 60)
-        }
-        // Después de 30 minutos, incrementos de 15 minutos hasta 4 horas
-        for minutes in stride(from: 45, through: 240, by: 15) {
-            options.append(minutes * 60)
+        // 75 a 240 minutos (4 horas), incrementos de 15
+        for minutes in stride(from: 75, through: 240, by: 15) {
+            options.append(minutes)
         }
         return options
     }()
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Text("Workout Time")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.white)
-                .padding(.top)
+                .padding(.top, 24)
             
-            Button(action: {
-                dismiss()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    showCustom = true
-                }
-            }) {
-                HStack {
-                    Image(systemName: "pencil")
-                    Text("Custom Time")
-                }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.black)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.neonGreen))
-            }
-            .padding(.horizontal)
-            
-            Divider()
-            
-            Picker("Time", selection: $selectedSeconds) {
-                ForEach(timeOptions, id: \.self) { seconds in
-                    Text(formatTimeOption(seconds))
-                        .tag(seconds)
+            Picker("Time", selection: $selectedMinutes) {
+                ForEach(timeOptions, id: \.self) { minutes in
+                    Text(formatTimeOption(minutes))
+                        .tag(minutes)
                 }
             }
             .pickerStyle(.wheel)
             .labelsHidden()
-            .frame(height: 150)
+            .frame(height: 180)
+            .onChange(of: selectedMinutes) { newValue in
+                if newValue == -1 {
+                    dismiss()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showCustom = true
+                    }
+                }
+            }
             
             Button(action: {
-                elapsedTime = selectedSeconds
+                if selectedMinutes > 0 {
+                    elapsedTime = selectedMinutes * 60
+                }
                 dismiss()
             }) {
                 Text("Set Time")
@@ -573,28 +615,93 @@ struct WorkoutTimePicker: View {
         }
         
         .onAppear {
-            selectedSeconds = elapsedTime
+            selectedMinutes = elapsedTime / 60
         }
     }
     
-    private func formatTimeOption(_ seconds: Int) -> String {
-        if seconds < 60 {
+    private func formatTimeOption(_ minutes: Int) -> String {
+        if minutes == -1 {
+            return "Custom"
+        } else if minutes < 60 {
+            return "\(minutes) min"
+        } else {
+            let hours = minutes / 60
+            let mins = minutes % 60
+            if mins == 0 {
+                return "\(hours) hr"
+            } else {
+                return "\(hours)h \(mins)m"
+            }
+        }
+    }
+}
+
+struct RestTimePicker: View {
+    @Binding var restSeconds: Int
+    @Environment(\.dismiss) var dismiss
+    @State private var selectedSeconds = 0
+    
+    let timeOptions: [Int] = {
+        var options: [Int] = [0] // 0 = OFF
+        // 30s a 3 minutos, incrementos de 15s
+        for seconds in stride(from: 30, through: 180, by: 15) {
+            options.append(seconds)
+        }
+        // 3.5 a 5 minutos, incrementos de 30s
+        for seconds in stride(from: 210, through: 300, by: 30) {
+            options.append(seconds)
+        }
+        return options
+    }()
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Rest Time")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.top, 24)
+            
+            Picker("Rest", selection: $selectedSeconds) {
+                ForEach(timeOptions, id: \.self) { seconds in
+                    Text(formatRestOption(seconds))
+                        .tag(seconds)
+                }
+            }
+            .pickerStyle(.wheel)
+            .labelsHidden()
+            .frame(height: 180)
+            
+            Button(action: {
+                restSeconds = selectedSeconds
+                dismiss()
+            }) {
+                Text("Set Rest Time")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.2)))
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
+        }
+        .onAppear {
+            selectedSeconds = restSeconds
+        }
+    }
+    
+    private func formatRestOption(_ seconds: Int) -> String {
+        if seconds == 0 {
+            return "OFF"
+        } else if seconds < 60 {
             return "\(seconds)s"
-        } else if seconds < 3600 {
+        } else {
             let mins = seconds / 60
             let secs = seconds % 60
             if secs == 0 {
                 return "\(mins) min"
             } else {
                 return "\(mins)m \(secs)s"
-            }
-        } else {
-            let hours = seconds / 3600
-            let mins = (seconds % 3600) / 60
-            if mins == 0 {
-                return "\(hours) hr"
-            } else {
-                return "\(hours)h \(mins)m"
             }
         }
     }

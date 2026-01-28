@@ -80,11 +80,12 @@ class WorkoutViewModel: ObservableObject {
         var workoutExercises: [ActiveWorkoutExercise] = []
         
         if let routine = routine {
-            workoutExercises = routine.exercises.map { routineExercise in
+            workoutExercises = routine.exercises.map { exercise in
                 ActiveWorkoutExercise(
-                    exerciseId: routineExercise.exerciseId,
-                    exerciseName: routineExercise.exerciseName,
-                    targetSets: routineExercise.targetSets,
+                    exerciseId: exercise.exerciseId,
+                    exerciseName: exercise.exerciseName,
+                    targetSets: exercise.targetSets,
+                    restSeconds: exercise.restSeconds,
                     completedSets: []
                 )
             }
@@ -101,11 +102,12 @@ class WorkoutViewModel: ObservableObject {
         print("🏋️ [WORKOUT] Started workout: \(routine?.name ?? "Empty Workout") with \(workoutExercises.count) exercises")
     }
     
-    func addExercise(to workout: inout ActiveWorkout, exercise: Exercise, targetSets: Int = 3) {
+    func addExercise(to workout: inout ActiveWorkout, exercise: Exercise, targetSets: Int = 3, restSeconds: Int = 90) {
         let workoutExercise = ActiveWorkoutExercise(
             exerciseId: exercise.id,
             exerciseName: exercise.name,
             targetSets: targetSets,
+            restSeconds: restSeconds,
             completedSets: []
         )
         
@@ -274,6 +276,7 @@ struct ActiveWorkoutExercise: Identifiable {
     let exerciseId: String
     let exerciseName: String
     let targetSets: Int
+    var restSeconds: Int
     var completedSets: [CompletedSet]
 }
 
