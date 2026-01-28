@@ -17,7 +17,7 @@ struct SetTemplateRow: View {
                 .foregroundColor(.white)
                 .frame(width: 50)
             
-            TextField("8-10", text: $reps)
+            TextField("-", text: $reps)
                 .multilineTextAlignment(.center)
                 .font(.system(size: 16))
                 .foregroundColor(.white)

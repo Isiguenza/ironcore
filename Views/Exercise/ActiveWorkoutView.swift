@@ -130,7 +130,12 @@ struct ActiveWorkoutView: View {
                 .foregroundColor(.gray)
 
             HStack(spacing: 20) {
-                Button(action: { restTimer = max(0, restTimer - 15) }) {
+                Button(action: { 
+                    restTimer = max(0, restTimer - 15)
+                    if restTimer == 0 {
+                        isResting = false
+                    }
+                }) {
                     HStack(spacing: 0){
                         Image(systemName: "minus")
                         .font(.system(size: 14))
@@ -307,11 +312,11 @@ struct ExerciseCard: View {
     
     private func initializeSetInputs() {
         let count = max(1, exercise.targetSets)
-        setInputs = (0..<count).map { _ in SetInput(reps: "8", weight: "20.0") }
+        setInputs = (0..<count).map { _ in SetInput(reps: "-", weight: "") }
     }
     
     private func addSet() {
-        setInputs.append(SetInput(reps: "8", weight: "20.0"))
+        setInputs.append(SetInput(reps: "-", weight: ""))
     }
     
     private func completeSet(at index: Int) {
@@ -381,7 +386,7 @@ struct SetRow: View {
                     .foregroundColor(isCompleted ? .green : .gray)
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 24)
         .padding(.vertical, 4)
     }
 }

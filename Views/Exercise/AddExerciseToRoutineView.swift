@@ -29,7 +29,7 @@ struct AddExerciseToRoutineView: View {
         _notes = State(initialValue: initialNotes ?? "")
         _sets = State(initialValue: {
             let count = initialSets ?? 1
-            return (0..<count).map { _ in SetTemplate(reps: initialReps ?? "8-10", weight: nil) }
+            return (0..<count).map { _ in SetTemplate(reps: initialReps ?? "-", weight: nil) }
         }())
     }
     
@@ -89,7 +89,7 @@ struct AddExerciseToRoutineView: View {
                                         )
                                     }
                                     
-                                    Button(action: { sets.append(SetTemplate(reps: "8-10", weight: nil)) }) {
+                                    Button(action: { sets.append(SetTemplate(reps: "-", weight: nil)) }) {
                                         HStack {
                                             Image(systemName: "plus")
                                             Text("Agregar Serie")
@@ -134,7 +134,7 @@ struct AddExerciseToRoutineView: View {
                         Spacer()
                         
                         Button(action: {
-                            onAdd(sets.count, sets.first?.reps ?? "8-10", restSeconds, notes.isEmpty ? nil : notes)
+                            onAdd(sets.count, sets.first?.reps ?? "-", restSeconds, notes.isEmpty ? nil : notes)
                             dismiss()
                         }) {
                             Text("Add to Routine")
