@@ -187,6 +187,8 @@ struct RankTierRow: View {
                         .stroke(rank.color, lineWidth: 3)
                         .frame(width: 60, height: 60)
                 }
+
+
             }
             
             VStack(alignment: .leading, spacing: 4) {

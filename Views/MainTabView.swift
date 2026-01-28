@@ -12,33 +12,40 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
+            ExerciseTab()
+                .tabItem {
+                    Image(systemName: "dumbbell.fill")
+                    Text("Exercise")
+                }
+                .tag(1)
+            
             LeaderboardView()
                 .tabItem {
                     Image(systemName: "chart.bar.fill")
                     Text("Leaderboard")
                 }
-                .tag(1)
+                .tag(2)
             
             FriendsView()
                 .tabItem {
                     Image(systemName: "person.2.fill")
                     Text("Friends")
                 }
-                .tag(2)
+                .tag(3)
             
             HistoryView()
                 .tabItem {
                     Image(systemName: "clock.fill")
                     Text("History")
                 }
-                .tag(3)
+                .tag(4)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("Settings")
                 }
-                .tag(4)
+                .tag(5)
         }
         .accentColor(.neonGreen)
     }
