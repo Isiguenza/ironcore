@@ -501,11 +501,11 @@ struct ExerciseCard: View {
             }
         }
         .padding()
-        .overlay {
+        .overlay(alignment: .topLeading) {
             if isKeyboardVisible {
-                Color.black.opacity(0.001)
+                Color.clear
                     .contentShape(Rectangle())
-                    .onTapGesture {
+                    .onTapGesture { coordinate in
                         hideKeyboard()
                     }
                     .allowsHitTesting(true)
@@ -656,6 +656,14 @@ struct SetRow: View {
                             // Bloquea tap simple sin hacer nada
                         }
                 )
+                .toolbar{
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Button("Done") {
+                            isKeyboardVisible = false
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        }
+                    }
+                }
             
             TextFieldWithDone(text: $input.reps, placeholder: "-", keyboardType: .numberPad) {
                 isKeyboardVisible = false
@@ -665,9 +673,9 @@ struct SetRow: View {
             .frame(maxWidth: .infinity)
             .background(Color(white: 0.1))
             .cornerRadius(8)
-            .simultaneousGesture(TapGesture().onEnded {
+            .onTapGesture {
                 isKeyboardVisible = true
-            })
+            }
             
             TextFieldWithDone(text: $input.weight, placeholder: "-", keyboardType: .decimalPad) {
                 isKeyboardVisible = false
@@ -677,9 +685,9 @@ struct SetRow: View {
             .frame(maxWidth: .infinity)
             .background(Color(white: 0.1))
             .cornerRadius(8)
-            .simultaneousGesture(TapGesture().onEnded {
+            .onTapGesture {
                 isKeyboardVisible = true
-            })
+            }
             
             Button(action: onComplete) {
                 Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
@@ -854,12 +862,17 @@ struct TextFieldWithDone: UIViewRepresentable {
         textField.textColor = .white
         textField.delegate = context.coordinator
         
-        let toolbar = UIToolbar()
-        toolbar.sizeToFit()
+        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        toolbar.barTintColor = UIColor(white: 0.1, alpha: 1.0)
+        toolbar.isTranslucent = true
+        
         let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
         let doneButton = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.donePressed))
         doneButton.tintColor = UIColor(red: 0.6, green: 1.0, blue: 0.2, alpha: 1.0)
-        toolbar.items = [flexSpace, doneButton]
+        
+        toolbar.items = [flexSpace, doneButton, flexSpace]
+        toolbar.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 12, right: 0)
         textField.inputAccessoryView = toolbar
         
         return textField
