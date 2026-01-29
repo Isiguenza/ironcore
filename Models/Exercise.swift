@@ -8,12 +8,18 @@ struct Exercise: Codable, Identifiable, Hashable {
     let equipment: Equipment
     let instructions: String?
     let videoUrl: String?
+    let imageUrl: String?
+    let gifUrl: String?
+    let exerciseDbId: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name, category, instructions
         case muscleGroup = "muscle_group"
         case equipment
         case videoUrl = "video_url"
+        case imageUrl = "image_url"
+        case gifUrl = "gif_url"
+        case exerciseDbId = "exercise_db_id"
     }
 }
 

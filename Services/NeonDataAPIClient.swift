@@ -2,7 +2,7 @@ import Foundation
 
 class NeonDataAPIClient {
     static let shared = NeonDataAPIClient()
-    private let baseURL = Config.dataAPIRestURL
+    let baseURL = Config.dataAPIRestURL
     
     private init() {}
     

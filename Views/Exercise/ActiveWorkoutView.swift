@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ActiveWorkoutView: View {
     @Environment(\.dismiss) var dismiss
@@ -8,42 +9,45 @@ struct ActiveWorkoutView: View {
     @State private var restTimer = 0
     @State private var isResting = false
     @State private var showExerciseLibrary = false
+    @State private var showExerciseSearch = false
     @State private var showFinishConfirmation = false
     @State private var showDiscardConfirmation = false
     @State private var showEditWorkoutTime = false
     @State private var showCustomWorkoutTime = false
     @State private var customWorkoutTimeInput = ""
+    @State private var isReorganizing = false
+    @Environment(\.editMode) private var editMode
     
     var body: some View {
         NavigationView {
-            ZStack {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        hideKeyboard()
-                    }
+            VStack(spacing: 0) {
+                headerSection
                 
-                VStack(spacing: 0) {
-                    headerSection
-                    
-                    ScrollView(showsIndicators: false){
-                        VStack(spacing: 16) {
-                            if let workout = workoutViewModel.activeWorkout {
-                                ForEach(Array(workout.exercises.enumerated()), id: \.offset) { index, exercise in
-                                    ExerciseCard(
-                                        exercise: exercise,
-                                        exerciseIndex: index,
-                                        workoutViewModel: workoutViewModel,
-                                        onSetComplete: { 
-                                            if exercise.restSeconds > 0 {
-                                                startRestTimer(duration: exercise.restSeconds)
-                                            }
+                List {
+                        if let workout = workoutViewModel.activeWorkout {
+                            ForEach(Array(workout.exercises.enumerated()), id: \.element.id) { index, exercise in
+                                ExerciseCard(
+                                    exercise: exercise,
+                                    exerciseIndex: index,
+                                    workoutViewModel: workoutViewModel,
+                                    isReorganizing: $isReorganizing,
+                                    onSetComplete: { 
+                                        if exercise.restSeconds > 0 {
+                                            startRestTimer(duration: exercise.restSeconds)
                                         }
-                                    )
-                                }
+                                    }
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             }
-                            
-                            Button(action: { showExerciseLibrary = true }) {
+                            .onMove { source, destination in
+                                workoutViewModel.reorderExercises(from: source, to: destination)
+                            }
+                        }
+                        
+                        Section {
+                            Button(action: { showExerciseSearch = true }) {
                                 HStack(spacing: 12) {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.system(size: 22))
@@ -55,8 +59,10 @@ struct ActiveWorkoutView: View {
                                 .padding(.vertical, 16)
                                 .background(RoundedRectangle(cornerRadius: 14).fill(Color.neonGreen))
                             }
-                            .padding(.horizontal)
-                            .padding(.top, 8)
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             
                             Button(action: { showDiscardConfirmation = true }) {
                                 HStack(spacing: 12) {
@@ -70,13 +76,28 @@ struct ActiveWorkoutView: View {
                                 .padding(.vertical, 16)
                                 .background(RoundedRectangle(cornerRadius: 14).fill(Color(white: 0.15)))
                             }
-                            .padding(.horizontal)
-                            .padding(.top, 8)
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         }
-                        .padding(.vertical)
                     }
-                    
-                    
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.black)
+                }
+            }
+            .sheet(isPresented: $showExerciseSearch) {
+                ExerciseSearchView { selectedExercise in
+                    Task {
+                        if let exerciseId = await workoutViewModel.addExerciseFromAPI(selectedExercise),
+                           let exercise = workoutViewModel.exercises.first(where: { $0.id == exerciseId }) {
+                            if var workout = workoutViewModel.activeWorkout {
+                                workoutViewModel.addExercise(to: &workout, exercise: exercise)
+                                workoutViewModel.activeWorkout = workout
+                            }
+                        }
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -86,6 +107,20 @@ struct ActiveWorkoutView: View {
                         Text("Finish")
                             .foregroundColor(.neonGreen)
                             .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if isReorganizing {
+                        Button(action: {
+                            withAnimation {
+                                isReorganizing = false
+                            }
+                        }) {
+                            Text("Done")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.neonGreen)
+                        }
                     }
                 }
             }
@@ -146,11 +181,11 @@ struct ActiveWorkoutView: View {
             .onDisappear {
                 timer?.invalidate()
             }
-        }
+            .environment(\.editMode, isReorganizing ? .constant(.active) : .constant(.inactive))
     }
     
     private var headerSection: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Duration")
@@ -175,6 +210,23 @@ struct ActiveWorkoutView: View {
             
             Divider()
                 .background(Color(white: 0.2))
+            
+            // Progress bar
+            if let workout = workoutViewModel.activeWorkout {
+                let progress = calculateWorkoutProgress(workout: workout)
+                ZStack(alignment: .leading) {
+                    // Background
+                    Rectangle()
+                        .fill(Color(white: 0.1))
+                        .frame(height: 4)
+                    
+                    // Progress fill
+                    Rectangle()
+                        .fill(Color.neonGreen)
+                        .frame(width: UIScreen.main.bounds.width * progress, height: 4)
+                }
+                .frame(height: 4)
+            }
         }
         .background(Color.black)
     }
@@ -251,16 +303,26 @@ struct ActiveWorkoutView: View {
     }
     
     private func formatTime(_ seconds: Int) -> String {
-        let totalMinutes = seconds / 60
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
         let secs = seconds % 60
         
-        if totalMinutes >= 60 {
-            let hours = totalMinutes / 60
-            let mins = totalMinutes % 60
-            return String(format: "%02d:%02d:%02d", hours, mins, secs)
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, secs)
         } else {
-            return String(format: "%02d:%02d", totalMinutes, secs)
+            return String(format: "%d:%02d", minutes, secs)
         }
+    }
+    
+    private func calculateWorkoutProgress(workout: ActiveWorkout) -> Double {
+        guard !workout.exercises.isEmpty else { return 0 }
+        
+        let totalSetsTarget = workout.exercises.reduce(0) { $0 + $1.targetSets }
+        let completedSetsCount = workout.exercises.reduce(0) { $0 + $1.completedSets.count }
+        
+        guard totalSetsTarget > 0 else { return 0 }
+        
+        return Double(completedSetsCount) / Double(totalSetsTarget)
     }
     
     private func addExerciseToWorkout(_ exercise: Exercise) {
@@ -268,32 +330,70 @@ struct ActiveWorkoutView: View {
         workoutViewModel.addExercise(to: &workout, exercise: exercise, targetSets: 3)
         workoutViewModel.activeWorkout = workout
     }
-    
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
 }
 
 struct ExerciseCard: View {
     let exercise: ActiveWorkoutExercise
     let exerciseIndex: Int
     @ObservedObject var workoutViewModel: WorkoutViewModel
+    @Binding var isReorganizing: Bool
     let onSetComplete: () -> Void
     @State private var setInputs: [SetInput] = []
     @State private var weightUnit: WeightUnit = .lbs
     @State private var showUnitPicker = false
     @State private var showRestTimePicker = false
     @State private var showExerciseDetail = false
+    @State private var isKeyboardVisible = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
+            HStack(spacing: 12) {
+                if let gifUrl = exercise.gifUrl, let url = URL(string: gifUrl) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 50, height: 50)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        default:
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(white: 0.15))
+                                    .frame(width: 50, height: 50)
+                                
+                                if case .failure = phase {
+                                    Image(systemName: "figure.strengthtraining.traditional")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.gray)
+                                } else {
+                                    ProgressView()
+                                        .tint(.neonGreen)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(white: 0.15))
+                            .frame(width: 50, height: 50)
+                        
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.system(size: 20))
+                            .foregroundColor(.gray)
+                    }
+                }
+                
                 VStack(alignment: .leading, spacing: 4) {
                     Button(action: { showExerciseDetail = true }) {
                         Text(exercise.exerciseName)
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
+                            .multilineTextAlignment(.leading)
                             .foregroundColor(.white)
                     }
+                    .buttonStyle(.plain)
                     
                     Text("\(exercise.completedSets.count)/\(exercise.targetSets) logged")
                         .font(.system(size: 13))
@@ -312,22 +412,33 @@ struct ExerciseCard: View {
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.neonGreen)
                     }
+                    .buttonStyle(.plain)
                     
                 }
                 .padding(.horizontal)
                 
                
                 
-                Menu {
-                    Button(role: .destructive) {
-                        // Remove exercise
+                if !isReorganizing {
+                    Menu {
+                        Button {
+                            withAnimation {
+                                isReorganizing = true
+                            }
+                        } label: {
+                            Label("Reorganize", systemImage: "arrow.up.arrow.down")
+                        }
+                        
+                        Button(role: .destructive) {
+                            // Remove exercise
+                        } label: {
+                            Label("Remove", systemImage: "trash")
+                        }
                     } label: {
-                        Label("Remove", systemImage: "trash")
+                        Image(systemName: "ellipsis")
+                            .foregroundColor(.gray)
+                            .padding(8)
                     }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundColor(.gray)
-                        .padding(8)
                 }
             }
             
@@ -353,6 +464,7 @@ struct ExerciseCard: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.gray)
                     }
+                    .buttonStyle(.plain)
                     .frame(maxWidth: .infinity)
                     
                     Spacer()
@@ -372,7 +484,8 @@ struct ExerciseCard: View {
                         onComplete: {
                             completeSet(at: index)
                         },
-                        lastWeight: "-"
+                        lastWeight: "-",
+                        isKeyboardVisible: $isKeyboardVisible
                     )
                 }
                 
@@ -388,6 +501,16 @@ struct ExerciseCard: View {
             }
         }
         .padding()
+        .overlay {
+            if isKeyboardVisible {
+                Color.black.opacity(0.001)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        hideKeyboard()
+                    }
+                    .allowsHitTesting(true)
+            }
+        }
         .sheet(isPresented: $showUnitPicker) {
             WeightUnitPicker(selectedUnit: $weightUnit)
                 .presentationDetents([.height(200)])
@@ -409,7 +532,8 @@ struct ExerciseCard: View {
         .fullScreenCover(isPresented: $showExerciseDetail) {
             ExerciseDetailView(
                 exerciseName: exercise.exerciseName,
-                exerciseId: exercise.exerciseId
+                exerciseId: exercise.exerciseId,
+                gifUrl: exercise.gifUrl
             )
         }
         .onAppear {
@@ -478,6 +602,11 @@ struct ExerciseCard: View {
             }
         }
     }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        isKeyboardVisible = false
+    }
 }
 
 struct SetInput {
@@ -491,6 +620,7 @@ struct SetRow: View {
     let isCompleted: Bool
     let onComplete: () -> Void
     let lastWeight: String
+    @Binding var isKeyboardVisible: Bool
     
     var body: some View {
         HStack {
@@ -503,34 +633,43 @@ struct SetRow: View {
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
                 .frame(width: 60)
+                .onTapGesture(count: 2) {
+                    if lastWeight != "-" {
+                        input.weight = lastWeight
+                    }
+                }
             
-            TextField("-", text: $input.reps)
-                .keyboardType(.numberPad)
-                .multilineTextAlignment(.center)
-                .font(.system(size: 16))
-                .foregroundColor(.white)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                .background(Color(white: 0.1))
-                .cornerRadius(8)
+            TextFieldWithDone(text: $input.reps, placeholder: "-", keyboardType: .numberPad) {
+                isKeyboardVisible = false
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Color(white: 0.1))
+            .cornerRadius(8)
+            .simultaneousGesture(TapGesture().onEnded {
+                isKeyboardVisible = true
+            })
             
-            TextField("-", text: $input.weight)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.center)
-                .font(.system(size: 16))
-                .foregroundColor(.white)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                .background(Color(white: 0.1))
-                .cornerRadius(8)
+            TextFieldWithDone(text: $input.weight, placeholder: "-", keyboardType: .decimalPad) {
+                isKeyboardVisible = false
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Color(white: 0.1))
+            .cornerRadius(8)
+            .simultaneousGesture(TapGesture().onEnded {
+                isKeyboardVisible = true
+            })
             
             Button(action: onComplete) {
                 Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
                     .foregroundColor(isCompleted ? .green : .gray)
             }
+            .buttonStyle(.plain)
         }
-        
         .padding(.vertical, 4)
     }
 }
@@ -678,6 +817,64 @@ struct WorkoutTimePicker: View {
             } else {
                 return "\(hours)h \(mins)m"
             }
+        }
+    }
+}
+
+struct TextFieldWithDone: UIViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+    var keyboardType: UIKeyboardType
+    var onDone: () -> Void
+    
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.placeholder = placeholder
+        textField.keyboardType = keyboardType
+        textField.textAlignment = .center
+        textField.font = .systemFont(ofSize: 16)
+        textField.textColor = .white
+        textField.delegate = context.coordinator
+        
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let doneButton = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.donePressed))
+        doneButton.tintColor = UIColor(red: 0.6, green: 1.0, blue: 0.2, alpha: 1.0)
+        toolbar.items = [flexSpace, doneButton]
+        textField.inputAccessoryView = toolbar
+        
+        return textField
+    }
+    
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        uiView.text = text
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text, onDone: onDone)
+    }
+    
+    class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding var text: String
+        var onDone: () -> Void
+        
+        init(text: Binding<String>, onDone: @escaping () -> Void) {
+            _text = text
+            self.onDone = onDone
+        }
+        
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            text = textField.text ?? ""
+        }
+        
+        @objc func donePressed() {
+            onDone()
+        }
+        
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            onDone()
+            return true
         }
     }
 }

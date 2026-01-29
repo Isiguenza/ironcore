@@ -4,13 +4,15 @@ import Charts
 struct ExerciseDetailView: View {
     let exerciseName: String
     let exerciseId: String
+    let gifUrl: String?
     @Environment(\.dismiss) var dismiss
     @State private var selectedTab = 0
     @StateObject private var viewModel: ExerciseDetailViewModel
     
-    init(exerciseName: String, exerciseId: String) {
+    init(exerciseName: String, exerciseId: String, gifUrl: String?) {
         self.exerciseName = exerciseName
         self.exerciseId = exerciseId
+        self.gifUrl = gifUrl
         _viewModel = StateObject(wrappedValue: ExerciseDetailViewModel(exerciseId: exerciseId))
     }
     
@@ -20,13 +22,13 @@ struct ExerciseDetailView: View {
                 customTabBar
                 
                 TabView(selection: $selectedTab) {
-                    OverviewTab(exerciseName: exerciseName, viewModel: viewModel)
+                    OverviewTab(exerciseName: exerciseName, gifUrl: gifUrl, viewModel: viewModel)
                         .tag(0)
                     
                     HistoryTab(exerciseName: exerciseName, viewModel: viewModel)
                         .tag(1)
                     
-                    InstructionsTab(exerciseName: exerciseName)
+                    InstructionsTab(exerciseName: exerciseName, gifUrl: gifUrl, viewModel: viewModel)
                         .tag(2)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -91,6 +93,7 @@ struct TabButton: View {
 
 struct OverviewTab: View {
     let exerciseName: String
+    let gifUrl: String?
     @ObservedObject var viewModel: ExerciseDetailViewModel
     @State private var selectedMetric = "Max Weight"
     
@@ -112,14 +115,22 @@ struct OverviewTab: View {
     }
     
     private var exerciseIllustration: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(white: 0.15))
-                .frame(height: 250)
-            
-            Image(systemName: "figure.strengthtraining.traditional")
-                .font(.system(size: 80))
-                .foregroundColor(.gray)
+        Group {
+            if let gifUrl = gifUrl, let url = URL(string: gifUrl) {
+                AnimatedImage(url: url)
+                    .frame(height: 250)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(white: 0.15))
+                        .frame(height: 250)
+                    
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .font(.system(size: 60))
+                        .foregroundColor(.gray)
+                }
+            }
         }
     }
     
@@ -413,18 +424,43 @@ struct WorkoutHistoryCard: View {
 
 struct InstructionsTab: View {
     let exerciseName: String
+    let gifUrl: String?
+    @ObservedObject var viewModel: ExerciseDetailViewModel
+    
+    private var instructionSteps: [(number: Int, text: String)] {
+        guard let instructions = viewModel.exercise?.instructions else {
+            return []
+        }
+        
+        // Parse instructions - format: "Step:1 text\nStep:2 text\n..."
+        let steps = instructions.components(separatedBy: "\n")
+        return steps.enumerated().compactMap { index, step in
+            let trimmed = step.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty { return nil }
+            
+            // Remove "Step:N" prefix if present
+            let text = trimmed.replacingOccurrences(of: #"^Step:\d+\s*"#, with: "", options: .regularExpression)
+            return (number: index + 1, text: text)
+        }
+    }
     
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(white: 0.15))
+                if let gifUrl = gifUrl, let url = URL(string: gifUrl) {
+                    AnimatedImage(url: url)
                         .frame(height: 250)
-                    
-                    Image(systemName: "figure.strengthtraining.traditional")
-                        .font(.system(size: 80))
-                        .foregroundColor(.gray)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(white: 0.15))
+                            .frame(height: 250)
+                        
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
@@ -435,25 +471,20 @@ struct InstructionsTab: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 20) {
-                    InstructionStep(
-                        number: 1,
-                        text: "Position yourself on the equipment and adjust the settings. Your muscles should be relaxed, allowing you to release the weight by extending your ankles."
-                    )
-                    
-                    InstructionStep(
-                        number: 2,
-                        text: "Place your muscles against the pad and grip the handles firmly."
-                    )
-                    
-                    InstructionStep(
-                        number: 3,
-                        text: "Take a breath and release the weight by flexing your calves."
-                    )
-                    
-                    InstructionStep(
-                        number: 4,
-                        text: "Remove the safety bar and flex your ankles to lower the weight until you feel a stretch in your calves."
-                    )
+                    if instructionSteps.isEmpty {
+                        Text("No instructions available")
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 40)
+                    } else {
+                        ForEach(instructionSteps, id: \.number) { step in
+                            InstructionStep(
+                                number: step.number,
+                                text: step.text
+                            )
+                        }
+                    }
                 }
             }
             .padding()

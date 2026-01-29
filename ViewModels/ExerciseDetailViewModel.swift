@@ -6,6 +6,7 @@ class ExerciseDetailViewModel: ObservableObject {
     @Published var history: [WorkoutHistoryItem] = []
     @Published var personalRecords: PersonalRecordsData?
     @Published var stats: [ExerciseStats] = []
+    @Published var exercise: Exercise?
     @Published var isLoading = false
     @Published var error: String?
     
@@ -23,15 +24,31 @@ class ExerciseDetailViewModel: ObservableObject {
         isLoading = true
         error = nil
         
+        async let exerciseTask = loadExercise()
         async let historyTask = loadHistory()
         async let recordsTask = loadPersonalRecords()
         async let statsTask = loadStats()
         
+        await exerciseTask
         await historyTask
         await recordsTask
         await statsTask
         
         isLoading = false
+    }
+    
+    private func loadExercise() async {
+        do {
+            let exercises: [Exercise] = try await apiClient.get(
+                table: "exercises",
+                query: ["id": "eq.\(exerciseId)"]
+            )
+            exercise = exercises.first
+            print("🏋️ [ExerciseDetail] Loaded exercise details")
+        } catch {
+            print("❌ [ExerciseDetail] Failed to load exercise: \(error.localizedDescription)")
+            self.error = error.localizedDescription
+        }
     }
     
     private func loadHistory() async {

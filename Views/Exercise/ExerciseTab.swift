@@ -40,6 +40,7 @@ struct ExerciseTab: View {
         }
         .onAppear {
             Task {
+                await workoutViewModel.loadExercises()
                 await workoutViewModel.loadRoutines()
             }
         }

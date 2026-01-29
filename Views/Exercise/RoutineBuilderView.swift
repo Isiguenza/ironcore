@@ -7,6 +7,7 @@ struct RoutineBuilderView: View {
     @State private var routineDescription = ""
     @State private var exercises: [RoutineExerciseBuilder] = []
     @State private var showExerciseLibrary = false
+    @State private var showExerciseSearch = false
     @State private var selectedExercise: Exercise?
     @State private var showAddExercise = false
     @State private var editingExerciseIndex: Int?
@@ -54,7 +55,7 @@ struct RoutineBuilderView: View {
                             }
                             
                             if exercises.isEmpty {
-                                Button(action: { showExerciseLibrary = true }) {
+                                Button(action: { showExerciseSearch = true }) {
                                     HStack {
                                         Image(systemName: "plus.circle.fill")
                                             .font(.system(size: 20))
@@ -80,7 +81,7 @@ struct RoutineBuilderView: View {
                                     )
                                 }
                                 
-                                Button(action: { showExerciseLibrary = true }) {
+                                Button(action: { showExerciseSearch = true }) {
                                     HStack {
                                         Image(systemName: "plus.circle")
                                         Text("Add Exercise")
@@ -120,16 +121,19 @@ struct RoutineBuilderView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showExerciseLibrary) {
-                ExerciseLibraryView(workoutViewModel: workoutViewModel) { exercise in
-                    selectedExercise = exercise
-                    showExerciseLibrary = false
-                }
-            }
-            .onChange(of: showExerciseLibrary) { isShowing in
-                if !isShowing && selectedExercise != nil {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        showAddExercise = true
+            .sheet(isPresented: $showExerciseSearch) {
+                ExerciseSearchView { selectedAPIExercise in
+                    showExerciseSearch = false
+                    Task {
+                        if let exerciseId = await workoutViewModel.addExerciseFromAPI(selectedAPIExercise),
+                           let exercise = workoutViewModel.exercises.first(where: { $0.id == exerciseId }) {
+                            await MainActor.run {
+                                selectedExercise = exercise
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    showAddExercise = true
+                                }
+                            }
+                        }
                     }
                 }
             }
