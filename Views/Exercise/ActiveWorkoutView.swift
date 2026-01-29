@@ -633,11 +633,29 @@ struct SetRow: View {
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
                 .frame(width: 60)
-                .onTapGesture(count: 2) {
-                    if lastWeight != "-" {
-                        input.weight = lastWeight
-                    }
-                }
+                .contentShape(Rectangle())
+                .highPriorityGesture(
+                    TapGesture(count: 2)
+                        .onEnded {
+                            if lastWeight != "-" {
+                                input.weight = lastWeight
+                                let impact = UIImpactFeedbackGenerator(style: .light)
+                                impact.impactOccurred()
+                            } else {
+                                let notification = UINotificationFeedbackGenerator()
+                                notification.notificationOccurred(.error)
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    notification.notificationOccurred(.error)
+                                }
+                            }
+                        }
+                )
+                .simultaneousGesture(
+                    TapGesture(count: 1)
+                        .onEnded { _ in
+                            // Bloquea tap simple sin hacer nada
+                        }
+                )
             
             TextFieldWithDone(text: $input.reps, placeholder: "-", keyboardType: .numberPad) {
                 isKeyboardVisible = false
