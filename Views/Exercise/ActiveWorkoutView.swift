@@ -656,14 +656,6 @@ struct SetRow: View {
                             // Bloquea tap simple sin hacer nada
                         }
                 )
-                .toolbar{
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Button("Done") {
-                            isKeyboardVisible = false
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                        }
-                    }
-                }
             
             TextFieldWithDone(text: $input.reps, placeholder: "-", keyboardType: .numberPad) {
                 isKeyboardVisible = false
@@ -697,6 +689,69 @@ struct SetRow: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 4)
+    }
+}
+
+struct TextFieldWithDone: UIViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+    var keyboardType: UIKeyboardType
+    var onDone: () -> Void
+    
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.placeholder = placeholder
+        textField.keyboardType = keyboardType
+        textField.textAlignment = .center
+        textField.font = .systemFont(ofSize: 16)
+        textField.textColor = .white
+        textField.delegate = context.coordinator
+        
+        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 60))
+        toolbar.barTintColor = UIColor(white: 0.1, alpha: 1.0)
+        toolbar.isTranslucent = true
+        
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        let doneButton = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.donePressed))
+        doneButton.tintColor = UIColor(red: 0.6, green: 1.0, blue: 0.2, alpha: 1.0)
+        
+        toolbar.items = [flexSpace, doneButton]
+        toolbar.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 20, right: 0)
+        textField.inputAccessoryView = toolbar
+        
+        return textField
+    }
+    
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        uiView.text = text
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text, onDone: onDone)
+    }
+    
+    class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding var text: String
+        var onDone: () -> Void
+        
+        init(text: Binding<String>, onDone: @escaping () -> Void) {
+            _text = text
+            self.onDone = onDone
+        }
+        
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            text = textField.text ?? ""
+        }
+        
+        @objc func donePressed() {
+            onDone()
+        }
+        
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            onDone()
+            return true
+        }
     }
 }
 
@@ -843,69 +898,6 @@ struct WorkoutTimePicker: View {
             } else {
                 return "\(hours)h \(mins)m"
             }
-        }
-    }
-}
-
-struct TextFieldWithDone: UIViewRepresentable {
-    @Binding var text: String
-    var placeholder: String
-    var keyboardType: UIKeyboardType
-    var onDone: () -> Void
-    
-    func makeUIView(context: Context) -> UITextField {
-        let textField = UITextField()
-        textField.placeholder = placeholder
-        textField.keyboardType = keyboardType
-        textField.textAlignment = .center
-        textField.font = .systemFont(ofSize: 16)
-        textField.textColor = .white
-        textField.delegate = context.coordinator
-        
-        let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
-        toolbar.barTintColor = UIColor(white: 0.1, alpha: 1.0)
-        toolbar.isTranslucent = true
-        
-        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        
-        let doneButton = UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.donePressed))
-        doneButton.tintColor = UIColor(red: 0.6, green: 1.0, blue: 0.2, alpha: 1.0)
-        
-        toolbar.items = [flexSpace, doneButton, flexSpace]
-        toolbar.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: 12, right: 0)
-        textField.inputAccessoryView = toolbar
-        
-        return textField
-    }
-    
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        uiView.text = text
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, onDone: onDone)
-    }
-    
-    class Coordinator: NSObject, UITextFieldDelegate {
-        @Binding var text: String
-        var onDone: () -> Void
-        
-        init(text: Binding<String>, onDone: @escaping () -> Void) {
-            _text = text
-            self.onDone = onDone
-        }
-        
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            text = textField.text ?? ""
-        }
-        
-        @objc func donePressed() {
-            onDone()
-        }
-        
-        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            onDone()
-            return true
         }
     }
 }
