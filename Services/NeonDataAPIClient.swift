@@ -126,6 +126,237 @@ class NeonDataAPIClient {
             throw DataAPIError.requestFailed(httpResponse.statusCode)
         }
     }
+    
+    // MARK: - Exercise Detail Methods
+    
+    func getExerciseHistory(userId: String, exerciseId: String) async throws -> [WorkoutHistoryItem] {
+        // Get workout history grouped by session
+        let query = [
+            "select": "session_id:ws.id,workout_name:ws.routine_name,date:ws.start_time,set_number:wsets.set_number,weight:wsets.weight,reps:wsets.reps",
+            "ws.user_id": "eq.\(userId)",
+            "we.exercise_id": "eq.\(exerciseId)",
+            "ws.end_time": "not.is.null",
+            "order": "ws.start_time.desc,wsets.set_number.asc",
+            "limit": "100"
+        ]
+        
+        // This requires a JOIN which PostgREST doesn't support directly
+        // We'll need to use a custom RPC or view
+        // For now, fetch workout_sessions and workout_sets separately
+        
+        struct WorkoutSessionData: Codable {
+            let id: String
+            let routineName: String?
+            let startTime: Date
+            
+            enum CodingKeys: String, CodingKey {
+                case id
+                case routineName = "routine_name"
+                case startTime = "start_time"
+            }
+        }
+        
+        // Get sessions where this exercise was performed
+        let sessions: [WorkoutSessionData] = try await get(
+            table: "workout_sessions",
+            query: [
+                "user_id": "eq.\(userId)",
+                "end_time": "not.is.null",
+                "order": "start_time.desc",
+                "limit": "20"
+            ]
+        )
+        
+        var historyItems: [WorkoutHistoryItem] = []
+        
+        for session in sessions {
+            // Get exercises for this session
+            struct WorkoutExerciseData: Codable {
+                let id: String
+                let exerciseId: String
+                
+                enum CodingKeys: String, CodingKey {
+                    case id
+                    case exerciseId = "exercise_id"
+                }
+            }
+            
+            let exercises: [WorkoutExerciseData] = try await get(
+                table: "workout_exercises",
+                query: [
+                    "session_id": "eq.\(session.id)",
+                    "exercise_id": "eq.\(exerciseId)"
+                ]
+            )
+            
+            guard let workoutExercise = exercises.first else { continue }
+            
+            // Get sets for this exercise
+            struct WorkoutSetData: Codable {
+                let setNumber: Int
+                let weight: Double
+                let reps: Int
+                
+                enum CodingKeys: String, CodingKey {
+                    case setNumber = "set_number"
+                    case weight
+                    case reps
+                }
+            }
+            
+            let sets: [WorkoutSetData] = try await get(
+                table: "workout_sets",
+                query: [
+                    "workout_exercise_id": "eq.\(workoutExercise.id)",
+                    "order": "set_number.asc"
+                ]
+            )
+            
+            if !sets.isEmpty {
+                let historyItem = WorkoutHistoryItem(
+                    sessionId: session.id,
+                    workoutName: session.routineName ?? "Workout",
+                    date: session.startTime,
+                    sets: sets.map { HistoricalSet(setNumber: $0.setNumber, weight: $0.weight, reps: $0.reps) }
+                )
+                historyItems.append(historyItem)
+            }
+        }
+        
+        return historyItems
+    }
+    
+    func getPersonalRecords(userId: String, exerciseId: String) async throws -> PersonalRecordsData {
+        struct PRData: Codable {
+            let weight: Double
+            let reps: Int
+            let volume: Double
+            let achievedAt: Date
+            
+            enum CodingKeys: String, CodingKey {
+                case weight
+                case reps
+                case volume
+                case achievedAt = "achieved_at"
+            }
+        }
+        
+        let records: [PRData] = try await get(
+            table: "personal_records",
+            query: [
+                "user_id": "eq.\(userId)",
+                "exercise_id": "eq.\(exerciseId)",
+                "order": "weight.desc,volume.desc",
+                "limit": "2"
+            ]
+        )
+        
+        let maxWeight = records.first.map { PersonalRecord(weight: $0.weight, reps: $0.reps, volume: $0.volume, achievedAt: $0.achievedAt) }
+        let best1RM = records.count > 1 ? PersonalRecord(weight: records[1].weight, reps: records[1].reps, volume: records[1].volume, achievedAt: records[1].achievedAt) : nil
+        
+        return PersonalRecordsData(maxWeight: maxWeight, best1RM: best1RM)
+    }
+    
+    func getExerciseStats(userId: String, exerciseId: String, limit: Int = 365) async throws -> [ExerciseStats] {
+        struct StatsData: Codable {
+            let date: Date
+            let maxWeight: Double?
+            let totalVolume: Double?
+            let totalSets: Int?
+            
+            enum CodingKeys: String, CodingKey {
+                case date
+                case maxWeight = "max_weight"
+                case totalVolume = "total_volume"
+                case totalSets = "total_sets"
+            }
+        }
+        
+        let stats: [StatsData] = try await get(
+            table: "exercise_history",
+            query: [
+                "user_id": "eq.\(userId)",
+                "exercise_id": "eq.\(exerciseId)",
+                "order": "date.desc",
+                "limit": "\(limit)"
+            ]
+        )
+        
+        return stats.map { ExerciseStats(date: $0.date, maxWeight: $0.maxWeight ?? 0, totalVolume: $0.totalVolume ?? 0, totalSets: $0.totalSets ?? 0) }
+    }
+    
+    func getLastPerformedWeights(userId: String, exerciseId: String) async throws -> [Int: Double] {
+        // Get most recent session with this exercise
+        struct SessionData: Codable {
+            let id: String
+            let startTime: Date
+            
+            enum CodingKeys: String, CodingKey {
+                case id
+                case startTime = "start_time"
+            }
+        }
+        
+        let sessions: [SessionData] = try await get(
+            table: "workout_sessions",
+            query: [
+                "user_id": "eq.\(userId)",
+                "end_time": "not.is.null",
+                "order": "start_time.desc",
+                "limit": "10"
+            ]
+        )
+        
+        for session in sessions {
+            struct WorkoutExerciseData: Codable {
+                let id: String
+                let exerciseId: String
+                
+                enum CodingKeys: String, CodingKey {
+                    case id
+                    case exerciseId = "exercise_id"
+                }
+            }
+            
+            let exercises: [WorkoutExerciseData] = try await get(
+                table: "workout_exercises",
+                query: [
+                    "session_id": "eq.\(session.id)",
+                    "exercise_id": "eq.\(exerciseId)"
+                ]
+            )
+            
+            guard let workoutExercise = exercises.first else { continue }
+            
+            struct WorkoutSetData: Codable {
+                let setNumber: Int
+                let weight: Double
+                
+                enum CodingKeys: String, CodingKey {
+                    case setNumber = "set_number"
+                    case weight
+                }
+            }
+            
+            let sets: [WorkoutSetData] = try await get(
+                table: "workout_sets",
+                query: [
+                    "workout_exercise_id": "eq.\(workoutExercise.id)",
+                    "order": "set_number.asc"
+                ]
+            )
+            
+            if !sets.isEmpty {
+                var lastWeights: [Int: Double] = [:]
+                for set in sets {
+                    lastWeights[set.setNumber] = set.weight
+                }
+                return lastWeights
+            }
+        }
+        
+        return [:]
+    }
 }
 
 enum DataAPIError: LocalizedError {

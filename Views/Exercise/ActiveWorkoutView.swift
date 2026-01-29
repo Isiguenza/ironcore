@@ -283,14 +283,17 @@ struct ExerciseCard: View {
     @State private var weightUnit: WeightUnit = .lbs
     @State private var showUnitPicker = false
     @State private var showRestTimePicker = false
+    @State private var showExerciseDetail = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(exercise.exerciseName)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                    Button(action: { showExerciseDetail = true }) {
+                        Text(exercise.exerciseName)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                     
                     Text("\(exercise.completedSets.count)/\(exercise.targetSets) logged")
                         .font(.system(size: 13))
@@ -402,6 +405,12 @@ struct ExerciseCard: View {
             ))
             .presentationDetents([.height(400)])
             .presentationDragIndicator(.visible)
+        }
+        .fullScreenCover(isPresented: $showExerciseDetail) {
+            ExerciseDetailView(
+                exerciseName: exercise.exerciseName,
+                exerciseId: exercise.exerciseId
+            )
         }
         .onAppear {
             initializeSetInputs()
