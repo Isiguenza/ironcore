@@ -14,6 +14,30 @@ class WorkoutViewModel: ObservableObject {
     let dataAPI = NeonDataAPIClient.shared
     let exerciseDBAPI = ExerciseDBAPIClient.shared
     
+    func deleteRoutine(routineId: String) async {
+        do {
+            // Delete routine_exercises first (foreign key constraint)
+            try await dataAPI.delete(
+                table: "routine_exercises",
+                query: ["routine_id": "eq.\(routineId)"]
+            )
+            
+            // Delete routine
+            try await dataAPI.delete(
+                table: "routines",
+                query: ["id": "eq.\(routineId)"]
+            )
+            
+            // Remove from local state
+            routines.removeAll { $0.id == routineId }
+            
+            print("✅ [ROUTINE] Deleted routine: \(routineId)")
+        } catch {
+            errorMessage = error.localizedDescription
+            print("❌ [ROUTINE] Failed to delete routine: \(error)")
+        }
+    }
+    
     func loadRoutines() async {
         guard let userId = KeychainStore.shared.getUserId() else { return }
         

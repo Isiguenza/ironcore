@@ -174,6 +174,11 @@ struct ExerciseTab: View {
                         folders: folders,
                         onMoveToFolder: { folderId in
                             moveRoutineToFolder(routineId: routine.id, folderId: folderId)
+                        },
+                        onDelete: {
+                            Task {
+                                await workoutViewModel.deleteRoutine(routineId: routine.id)
+                            }
                         }
                     )
                 }
@@ -227,6 +232,12 @@ struct ExerciseTab: View {
                         },
                         onRemoveFromFolder: {
                             removeRoutineFromFolder(routineId: routine.id, folderId: folder.id)
+                        },
+                        onDelete: {
+                            Task {
+                                await workoutViewModel.deleteRoutine(routineId: routine.id)
+                                removeRoutineFromFolder(routineId: routine.id, folderId: folder.id)
+                            }
                         }
                     )
                 }
@@ -326,6 +337,7 @@ struct RoutineCard: View {
     var folders: [RoutineFolder] = []
     var onMoveToFolder: ((String) -> Void)?
     var onRemoveFromFolder: (() -> Void)?
+    var onDelete: (() -> Void)?
     
     var body: some View {
         HStack(spacing: 16) {
@@ -348,31 +360,55 @@ struct RoutineCard: View {
             
             Spacer()
             
-            Button(action: onStart) {
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(.neonGreen)
+            HStack(spacing: 12) {
+                Menu {
+                    menuContent
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 20))
+                        .foregroundColor(.gray)
+                        .frame(width: 32, height: 32)
+                }
+                
+                Button(action: onStart) {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.neonGreen)
+                }
             }
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 16).fill(Color(white: 0.05)))
         .contextMenu {
-            if !folders.isEmpty {
-                Menu("Move to Folder") {
-                    ForEach(folders) { folder in
-                        Button(folder.name) {
-                            onMoveToFolder?(folder.id)
-                        }
+            menuContent
+        }
+    }
+    
+    @ViewBuilder
+    private var menuContent: some View {
+        if !folders.isEmpty {
+            Menu("Move to Folder") {
+                ForEach(folders) { folder in
+                    Button(folder.name) {
+                        onMoveToFolder?(folder.id)
                     }
                 }
             }
-            
-            if let onRemove = onRemoveFromFolder {
-                Button(role: .destructive) {
-                    onRemove()
-                } label: {
-                    Label("Remove from Folder", systemImage: "folder.badge.minus")
-                }
+        }
+        
+        if let onRemove = onRemoveFromFolder {
+            Button(role: .destructive) {
+                onRemove()
+            } label: {
+                Label("Remove from Folder", systemImage: "folder.badge.minus")
+            }
+        }
+        
+        if let onDelete = onDelete {
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label("Delete Routine", systemImage: "trash")
             }
         }
     }
