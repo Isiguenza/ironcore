@@ -1,9 +1,25 @@
 import SwiftUI
 
+struct RoutineFolder: Identifiable, Codable {
+    let id: String
+    var name: String
+    var routineIds: [String]
+    
+    init(id: String = UUID().uuidString, name: String, routineIds: [String] = []) {
+        self.id = id
+        self.name = name
+        self.routineIds = routineIds
+    }
+}
+
 struct ExerciseTab: View {
     @StateObject private var workoutViewModel = WorkoutViewModel()
     @State private var showRoutineBuilder = false
     @State private var showActiveWorkout = false
+    @State private var folders: [RoutineFolder] = []
+    @State private var expandedFolders: Set<String> = []
+    @State private var showCreateFolder = false
+    @State private var newFolderName = ""
     
     var body: some View {
         NavigationView {
@@ -23,9 +39,9 @@ struct ExerciseTab: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showRoutineBuilder = true }) {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "plus")
                             .foregroundColor(.neonGreen)
-                            .font(.system(size: 24))
+                            .font(.system(size: 18))
                     }
                 }
             }
@@ -39,6 +55,7 @@ struct ExerciseTab: View {
             }
         }
         .onAppear {
+            loadFolders()
             Task {
                 await workoutViewModel.loadExercises()
                 await workoutViewModel.loadRoutines()
@@ -72,20 +89,205 @@ struct ExerciseTab: View {
     
     private var routinesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("MY ROUTINES")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.gray)
+            HStack {
+                Text("MY ROUTINES")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.gray)
+                
+                Spacer()
+                
+                Button(action: { showCreateFolder = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.badge.plus")
+                        Text("New Folder")
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.neonGreen)
+                }
+            }
             
             if workoutViewModel.routines.isEmpty {
                 emptyRoutinesView
             } else {
-                ForEach(workoutViewModel.routines) { routine in
-                    RoutineCard(routine: routine) {
-                        workoutViewModel.startWorkout(routine: routine)
-                        showActiveWorkout = true
-                    }
+                // Custom folders
+                ForEach(folders) { folder in
+                    folderSection(folder: folder)
+                }
+                
+                // "Routines" folder for uncategorized
+                if !uncategorizedRoutines.isEmpty {
+                    uncategorizedFolderSection
                 }
             }
+        }
+        .alert("New Folder", isPresented: $showCreateFolder) {
+            TextField("Folder Name", text: $newFolderName)
+            Button("Cancel", role: .cancel) { newFolderName = "" }
+            Button("Create") {
+                createFolder()
+            }
+        } message: {
+            Text("Enter a name for the new folder")
+        }
+    }
+    
+    private var uncategorizedFolderSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button(action: {
+                withAnimation {
+                    if expandedFolders.contains("uncategorized") {
+                        expandedFolders.remove("uncategorized")
+                    } else {
+                        expandedFolders.insert("uncategorized")
+                    }
+                }
+            }) {
+                HStack {
+                    Image(systemName: expandedFolders.contains("uncategorized") ? "folder.fill" : "folder")
+                        .font(.system(size: 14))
+                        .foregroundColor(.neonGreen)
+                    
+                    Text("Routines")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.gray)
+                    
+                    Text("(\(uncategorizedRoutines.count))")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray.opacity(0.6))
+                    
+                    Spacer()
+                    
+                    Image(systemName: expandedFolders.contains("uncategorized") ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.gray)
+                }
+            }
+            
+            if expandedFolders.contains("uncategorized") {
+                ForEach(uncategorizedRoutines) { routine in
+                    RoutineCard(
+                        routine: routine,
+                        onStart: {
+                            workoutViewModel.startWorkout(routine: routine)
+                            showActiveWorkout = true
+                        },
+                        folders: folders,
+                        onMoveToFolder: { folderId in
+                            moveRoutineToFolder(routineId: routine.id, folderId: folderId)
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    private func folderSection(folder: RoutineFolder) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button(action: {
+                withAnimation {
+                    if expandedFolders.contains(folder.id) {
+                        expandedFolders.remove(folder.id)
+                    } else {
+                        expandedFolders.insert(folder.id)
+                    }
+                }
+            }) {
+                HStack {
+                    Image(systemName: expandedFolders.contains(folder.id) ? "folder.fill" : "folder")
+                        .font(.system(size: 14))
+                        .foregroundColor(.neonGreen)
+                    
+                    Text(folder.name)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.gray)
+                    
+                    Text("(\(routinesInFolder(folder).count))")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray.opacity(0.6))
+                    
+                    Spacer()
+                    
+                    Image(systemName: expandedFolders.contains(folder.id) ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.gray)
+                }
+            }
+            
+            if expandedFolders.contains(folder.id) {
+                ForEach(routinesInFolder(folder)) { routine in
+                    RoutineCard(
+                        routine: routine,
+                        onStart: {
+                            workoutViewModel.startWorkout(routine: routine)
+                            showActiveWorkout = true
+                        },
+                        folders: folders.filter { $0.id != folder.id },
+                        onMoveToFolder: { folderId in
+                            moveRoutineToFolder(routineId: routine.id, folderId: folderId, fromFolderId: folder.id)
+                        },
+                        onRemoveFromFolder: {
+                            removeRoutineFromFolder(routineId: routine.id, folderId: folder.id)
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    private var uncategorizedRoutines: [Routine] {
+        let categorizedIds = Set(folders.flatMap { $0.routineIds })
+        return workoutViewModel.routines.filter { !categorizedIds.contains($0.id) }
+    }
+    
+    private func routinesInFolder(_ folder: RoutineFolder) -> [Routine] {
+        return workoutViewModel.routines.filter { folder.routineIds.contains($0.id) }
+    }
+    
+    private func createFolder() {
+        guard !newFolderName.isEmpty else { return }
+        let folder = RoutineFolder(name: newFolderName)
+        folders.append(folder)
+        expandedFolders.insert(folder.id)
+        saveFolders()
+        newFolderName = ""
+    }
+    
+    private func saveFolders() {
+        if let encoded = try? JSONEncoder().encode(folders) {
+            UserDefaults.standard.set(encoded, forKey: "routine_folders")
+        }
+    }
+    
+    private func loadFolders() {
+        if let data = UserDefaults.standard.data(forKey: "routine_folders"),
+           let decoded = try? JSONDecoder().decode([RoutineFolder].self, from: data) {
+            folders = decoded
+            // Expand all folders by default
+            expandedFolders = Set(folders.map { $0.id })
+            expandedFolders.insert("uncategorized") // Also expand Routines folder
+        }
+    }
+    
+    private func moveRoutineToFolder(routineId: String, folderId: String, fromFolderId: String? = nil) {
+        // Remove from previous folder if needed
+        if let fromId = fromFolderId, let index = folders.firstIndex(where: { $0.id == fromId }) {
+            folders[index].routineIds.removeAll { $0 == routineId }
+        }
+        
+        // Add to new folder
+        if let index = folders.firstIndex(where: { $0.id == folderId }) {
+            if !folders[index].routineIds.contains(routineId) {
+                folders[index].routineIds.append(routineId)
+            }
+        }
+        
+        saveFolders()
+    }
+    
+    private func removeRoutineFromFolder(routineId: String, folderId: String) {
+        if let index = folders.firstIndex(where: { $0.id == folderId }) {
+            folders[index].routineIds.removeAll { $0 == routineId }
+            saveFolders()
         }
     }
     
@@ -121,6 +323,9 @@ struct ExerciseTab: View {
 struct RoutineCard: View {
     let routine: Routine
     let onStart: () -> Void
+    var folders: [RoutineFolder] = []
+    var onMoveToFolder: ((String) -> Void)?
+    var onRemoveFromFolder: (() -> Void)?
     
     var body: some View {
         HStack(spacing: 16) {
@@ -146,10 +351,29 @@ struct RoutineCard: View {
             Button(action: onStart) {
                 Image(systemName: "play.circle.fill")
                     .font(.system(size: 32))
-                    .foregroundColor(.cyan)
+                    .foregroundColor(.neonGreen)
             }
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 16).fill(Color(white: 0.05)))
+        .contextMenu {
+            if !folders.isEmpty {
+                Menu("Move to Folder") {
+                    ForEach(folders) { folder in
+                        Button(folder.name) {
+                            onMoveToFolder?(folder.id)
+                        }
+                    }
+                }
+            }
+            
+            if let onRemove = onRemoveFromFolder {
+                Button(role: .destructive) {
+                    onRemove()
+                } label: {
+                    Label("Remove from Folder", systemImage: "folder.badge.minus")
+                }
+            }
+        }
     }
 }

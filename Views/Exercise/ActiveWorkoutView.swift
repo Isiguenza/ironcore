@@ -23,6 +23,8 @@ struct ActiveWorkoutView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 headerSection
+                    .frame(height: 90)
+                    .frame(maxWidth: .infinity)
                 
                 List {
                         if let workout = workoutViewModel.activeWorkout {
