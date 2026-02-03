@@ -30,7 +30,7 @@ struct WorkoutExercise: Codable, Identifiable, Hashable {
     let id: String
     let exerciseId: String
     let exerciseName: String
-    let sets: [WorkoutSet]
+    let sets: [WorkoutSet]?
     let notes: String?
     
     enum CodingKeys: String, CodingKey {
@@ -94,5 +94,40 @@ struct WorkoutSessionRequest: Codable {
         case totalVolume = "total_volume"
         case totalSets = "total_sets"
         case qualityScore = "quality_score"
+    }
+}
+
+struct WorkoutExerciseRequest: Codable {
+    let sessionId: String
+    let exerciseId: String
+    let exerciseName: String
+    let notes: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case exerciseId = "exercise_id"
+        case exerciseName = "exercise_name"
+        case notes
+    }
+}
+
+struct WorkoutSetRequest: Codable {
+    let workoutExerciseId: String
+    let setNumber: Int
+    let weight: Double
+    let reps: Int
+    let setType: String
+    let rpe: Int?
+    let isPersonalRecord: Bool
+    let completedAt: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case workoutExerciseId = "workout_exercise_id"
+        case setNumber = "set_number"
+        case weight, reps
+        case setType = "set_type"
+        case rpe
+        case isPersonalRecord = "is_personal_record"
+        case completedAt = "completed_at"
     }
 }

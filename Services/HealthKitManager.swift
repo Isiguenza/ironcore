@@ -110,7 +110,7 @@ class HealthKitManager {
         }
     }
     
-    func saveWorkout(startDate: Date, endDate: Date, totalVolume: Double, totalSets: Int) async throws {
+    func saveWorkout(routineName: String, startDate: Date, endDate: Date, totalVolume: Double, totalSets: Int) async throws {
         print("🏥 [HEALTHKIT] Saving workout to HealthKit...")
         
         guard isHealthDataAvailable else {
@@ -130,9 +130,10 @@ class HealthKitManager {
             totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
             totalDistance: nil,
             metadata: [
+                HKMetadataKeyWorkoutBrandName: "Iron Core",
+                "Routine Name": routineName,
                 "Total Sets": totalSets,
-                "Total Volume (lbs)": totalVolume,
-                "App": "Iron Core"
+                "Total Volume (lbs)": totalVolume
             ]
         )
         

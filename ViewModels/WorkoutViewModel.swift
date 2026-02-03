@@ -390,6 +390,11 @@ class WorkoutViewModel: ObservableObject {
         
         let qualityScore = calculateQualityScore(workout: workout)
         
+        // Debug: verificar sets completados
+        for (index, exercise) in workout.exercises.enumerated() {
+            print("🔍 [WORKOUT] Exercise \(index): \(exercise.exerciseName) - \(exercise.completedSets.count) sets completed")
+        }
+        
         let sessionRequest = WorkoutSessionRequest(
             userId: workout.userId,
             routineId: workout.routineId,
@@ -408,12 +413,16 @@ class WorkoutViewModel: ObservableObject {
                 workoutHistory.insert(session, at: 0)
                 print("✅ [WORKOUT] Workout saved - Quality: \(qualityScore ?? 0)")
                 
+                // Save exercises and sets
+                await saveWorkoutExercisesAndSets(sessionId: session.id, exercises: workout.exercises)
+                
                 await checkAndAwardLP(session: session, qualityScore: qualityScore ?? 0)
             }
             
             // Save to HealthKit
             do {
                 try await HealthKitManager.shared.saveWorkout(
+                    routineName: workout.routineName ?? "Workout",
                     startDate: workout.startTime,
                     endDate: workout.endTime!,
                     totalVolume: totalVolume,
@@ -539,7 +548,7 @@ class WorkoutViewModel: ObservableObject {
                 lpGain = 5
             }
             
-            let prCount = session.exercises?.flatMap { $0.sets }.filter { $0.isPersonalRecord }.count ?? 0
+            let prCount = session.exercises?.flatMap { $0.sets ?? [] }.filter { $0.isPersonalRecord }.count ?? 0
             lpGain += prCount * 5
             
             let newLP = currentRating.lp + lpGain

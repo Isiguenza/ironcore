@@ -11,6 +11,7 @@ struct ActiveWorkoutView: View {
     @State private var showExerciseLibrary = false
     @State private var showExerciseSearch = false
     @State private var showFinishConfirmation = false
+    @State private var showInvalidSetsAlert = false
     @State private var showDiscardConfirmation = false
     @State private var showEditWorkoutTime = false
     @State private var showCustomWorkoutTime = false
@@ -31,7 +32,8 @@ struct ActiveWorkoutView: View {
                                     exerciseIndex: index,
                                     workoutViewModel: workoutViewModel,
                                     isReorganizing: $isReorganizing,
-                                    onSetComplete: { 
+                                    onSetComplete: 
+{ 
                                         if exercise.restSeconds > 0 {
                                             startRestTimer(duration: exercise.restSeconds)
                                         }
@@ -89,7 +91,7 @@ struct ActiveWorkoutView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        showFinishConfirmation = true
+                        validateAndFinishWorkout()
                     } label: {
                         Text("Finish")
                     }
@@ -135,6 +137,18 @@ struct ActiveWorkoutView: View {
                 }
             } message: {
                 Text("Are you sure you want to finish this workout?")
+            }
+            .alert("Invalid Sets", isPresented: $showInvalidSetsAlert) {
+                Button("Keep Editing", role: .cancel) { }
+                Button("Continue Anyway") {
+                    showFinishConfirmation = true
+                }
+                Button("Discard Workout", role: .destructive) {
+                    workoutViewModel.activeWorkout = nil
+                    dismiss()
+                }
+            } message: {
+                Text("Some sets are incomplete or have invalid values. You can continue to finish the workout (incomplete sets won't be saved), keep editing to complete them, or discard the workout.")
             }
             .alert("Discard Workout", isPresented: $showDiscardConfirmation) {
                 Button("Cancel", role: .cancel) { }
@@ -287,6 +301,36 @@ struct ActiveWorkoutView: View {
         .padding(.bottom, 12) // ✅ poco padding afuera (solo separación)
     }
     
+    private func validateAndFinishWorkout() {
+        guard let workout = workoutViewModel.activeWorkout else { return }
+        
+        // Check if there are any incomplete or invalid sets
+        var hasIncompleteSets = false
+        
+        for exercise in workout.exercises {
+            // Check if any set inputs exist but are not completed
+            let totalSetsTarget = exercise.targetSets
+            if exercise.completedSets.count < totalSetsTarget {
+                hasIncompleteSets = true
+                break
+            }
+            
+            // Check if any completed sets have invalid values (weight or reps = 0)
+            for set in exercise.completedSets {
+                if set.weight <= 0 || set.reps <= 0 {
+                    hasIncompleteSets = true
+                    break
+                }
+            }
+        }
+        
+        if hasIncompleteSets {
+            showInvalidSetsAlert = true
+        } else {
+            showFinishConfirmation = true
+        }
+    }
+    
     private func startWorkoutTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             elapsedTime += 1
@@ -346,6 +390,7 @@ struct ExerciseCard: View {
     @State private var showRestTimePicker = false
     @State private var showExerciseDetail = false
     @State private var isKeyboardVisible = false
+    @State private var lastWeights: [Double] = []
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -484,7 +529,7 @@ struct ExerciseCard: View {
                         onComplete: {
                             completeSet(at: index)
                         },
-                        lastWeight: "-",
+                        lastWeight: index < lastWeights.count ? String(format: "%.1f", lastWeights[index]) : "-",
                         isKeyboardVisible: $isKeyboardVisible,
                         onDelete: {
                             deleteSet(at: index)
@@ -541,6 +586,9 @@ struct ExerciseCard: View {
         }
         .onAppear {
             initializeSetInputs()
+            Task {
+                await loadLastWeights()
+            }
         }
     }
     
@@ -563,6 +611,17 @@ struct ExerciseCard: View {
     private func initializeSetInputs() {
         let count = max(1, exercise.targetSets)
         setInputs = (0..<count).map { _ in SetInput(reps: "", weight: "") }
+    }
+    
+    private func loadLastWeights() async {
+        guard let userId = KeychainStore.shared.getUserId() else { return }
+        let weights = await workoutViewModel.getLastWeightsForExercise(
+            exerciseId: exercise.exerciseId,
+            userId: userId
+        )
+        await MainActor.run {
+            lastWeights = weights
+        }
     }
     
     private func addSet() {
