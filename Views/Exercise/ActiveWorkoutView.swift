@@ -485,7 +485,10 @@ struct ExerciseCard: View {
                             completeSet(at: index)
                         },
                         lastWeight: "-",
-                        isKeyboardVisible: $isKeyboardVisible
+                        isKeyboardVisible: $isKeyboardVisible,
+                        onDelete: {
+                            deleteSet(at: index)
+                        }
                     )
                 }
                 
@@ -566,6 +569,32 @@ struct ExerciseCard: View {
         setInputs.append(SetInput(reps: "", weight: ""))
     }
     
+    private func deleteSet(at index: Int) {
+        guard index < setInputs.count else { return }
+        
+        let setNumber = index + 1
+        
+        // Eliminar del ViewModel si estaba completado
+        if exercise.completedSets.contains(where: { $0.setNumber == setNumber }) {
+            workoutViewModel.uncompleteSet(exerciseIndex: exerciseIndex, setNumber: setNumber)
+        }
+        
+        // Eliminar del array local
+        setInputs.remove(at: index)
+        
+        // Actualizar números de sets completados posteriores
+        let completedToUpdate = exercise.completedSets.filter { $0.setNumber > setNumber }
+        for completedSet in completedToUpdate {
+            workoutViewModel.uncompleteSet(exerciseIndex: exerciseIndex, setNumber: completedSet.setNumber)
+            workoutViewModel.completeSet(
+                exerciseIndex: exerciseIndex,
+                setNumber: completedSet.setNumber - 1,
+                weight: completedSet.weight,
+                reps: completedSet.reps
+            )
+        }
+    }
+    
     private func completeSet(at index: Int) {
         guard index < setInputs.count else { return }
         
@@ -621,6 +650,7 @@ struct SetRow: View {
     let onComplete: () -> Void
     let lastWeight: String
     @Binding var isKeyboardVisible: Bool
+    let onDelete: () -> Void
     
     var body: some View {
         HStack {
@@ -687,6 +717,14 @@ struct SetRow: View {
                     .foregroundColor(isCompleted ? .green : .gray)
             }
             .buttonStyle(.plain)
+            
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.system(size: 16))
+                    .foregroundColor(.red.opacity(0.7))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 30)
         }
         .padding(.vertical, 4)
     }
