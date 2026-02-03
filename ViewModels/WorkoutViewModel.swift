@@ -411,6 +411,19 @@ class WorkoutViewModel: ObservableObject {
                 await checkAndAwardLP(session: session, qualityScore: qualityScore ?? 0)
             }
             
+            // Save to HealthKit
+            do {
+                try await HealthKitManager.shared.saveWorkout(
+                    startDate: workout.startTime,
+                    endDate: workout.endTime!,
+                    totalVolume: totalVolume,
+                    totalSets: totalSets
+                )
+            } catch {
+                print("⚠️ [HEALTHKIT] Failed to save workout: \(error.localizedDescription)")
+                // No lanzar error - el workout ya se guardó en BD
+            }
+            
             // Update routine exercise order if workout came from a routine
             if let routineId = workout.routineId {
                 await updateRoutineExerciseOrder(routineId: routineId, exercises: workout.exercises)
@@ -526,7 +539,7 @@ class WorkoutViewModel: ObservableObject {
                 lpGain = 5
             }
             
-            let prCount = session.exercises.flatMap { $0.sets }.filter { $0.isPersonalRecord }.count
+            let prCount = session.exercises?.flatMap { $0.sets }.filter { $0.isPersonalRecord }.count ?? 0
             lpGain += prCount * 5
             
             let newLP = currentRating.lp + lpGain

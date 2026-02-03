@@ -10,7 +10,7 @@ struct WorkoutSession: Codable, Identifiable {
     let duration: Int?
     let totalVolume: Double
     let totalSets: Int
-    let exercises: [WorkoutExercise]
+    let exercises: [WorkoutExercise]?
     let qualityScore: Double?
     
     enum CodingKeys: String, CodingKey {

@@ -26,8 +26,13 @@ class HealthKitManager {
             HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
         ]
         
-        print("🏥 [HEALTHKIT] Requesting read access for: Workouts, Active Energy, Exercise Time, Sleep")
-        try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
+        let typesToWrite: Set<HKSampleType> = [
+            HKObjectType.workoutType(),
+            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!
+        ]
+        
+        print("🏥 [HEALTHKIT] Requesting read/write access for: Workouts, Active Energy, Exercise Time, Sleep")
+        try await healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead)
         
         // Check authorization status
         let workoutStatus = healthStore.authorizationStatus(for: .workoutType())
@@ -104,11 +109,61 @@ class HealthKitManager {
             healthStore.execute(query)
         }
     }
+    
+    func saveWorkout(startDate: Date, endDate: Date, totalVolume: Double, totalSets: Int) async throws {
+        print("🏥 [HEALTHKIT] Saving workout to HealthKit...")
+        
+        guard isHealthDataAvailable else {
+            print("❌ [HEALTHKIT] HealthKit not available")
+            throw HealthKitError.notAvailable
+        }
+        
+        // Calcular calorías estimadas basadas en volumen (aprox 0.05 kcal por kg levantado)
+        let estimatedCalories = totalVolume * 0.05
+        
+        // Crear workout
+        let workout = HKWorkout(
+            activityType: .traditionalStrengthTraining,
+            start: startDate,
+            end: endDate,
+            duration: endDate.timeIntervalSince(startDate),
+            totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
+            totalDistance: nil,
+            metadata: [
+                "Total Sets": totalSets,
+                "Total Volume (lbs)": totalVolume,
+                "App": "Iron Core"
+            ]
+        )
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            healthStore.save(workout) { success, error in
+                if let error = error {
+                    print("❌ [HEALTHKIT] Error saving workout: \(error.localizedDescription)")
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                if success {
+                    print("✅ [HEALTHKIT] Workout saved successfully")
+                    print("   Duration: \(Int(endDate.timeIntervalSince(startDate)))s")
+                    print("   Sets: \(totalSets)")
+                    print("   Volume: \(Int(totalVolume)) lbs")
+                    print("   Calories: \(Int(estimatedCalories)) kcal")
+                    continuation.resume()
+                } else {
+                    print("❌ [HEALTHKIT] Failed to save workout")
+                    continuation.resume(throwing: HealthKitError.saveFailed)
+                }
+            }
+        }
+    }
 }
 
 enum HealthKitError: LocalizedError {
     case notAvailable
     case authorizationFailed
+    case saveFailed
     
     var errorDescription: String? {
         switch self {
@@ -116,6 +171,8 @@ enum HealthKitError: LocalizedError {
             return "HealthKit is not available on this device"
         case .authorizationFailed:
             return "Failed to authorize HealthKit access"
+        case .saveFailed:
+            return "Failed to save workout to HealthKit"
         }
     }
 }

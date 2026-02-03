@@ -16,10 +16,10 @@ struct ActiveWorkoutView: View {
     @State private var showCustomWorkoutTime = false
     @State private var customWorkoutTimeInput = ""
     @State private var isReorganizing = false
-    @Environment(\.editMode) private var editMode
+    @State private var editMode: EditMode = .inactive
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 headerSection
                 
@@ -86,6 +86,24 @@ struct ActiveWorkoutView: View {
                     .scrollContentBackground(.hidden)
                     .background(Color.black)
                 }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showFinishConfirmation = true
+                    } label: {
+                        Text("Finish")
+                    }
+                    .tint(.neonGreen)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    EditButton()
+                        .tint(.neonGreen)
+                }
+            }
+            .navigationTitle(workoutViewModel.activeWorkout?.routineName ?? "Workout")
+            .navigationBarTitleDisplayMode(.inline)
+            
             }
             .sheet(isPresented: $showExerciseSearch) {
                 ExerciseSearchView { selectedExercise in
@@ -100,30 +118,8 @@ struct ActiveWorkoutView: View {
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { showFinishConfirmation = true }) {
-                        Text("Finish")
-                            .foregroundColor(.neonGreen)
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if isReorganizing {
-                        Button(action: {
-                            withAnimation {
-                                isReorganizing = false
-                            }
-                        }) {
-                            Text("Done")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.neonGreen)
-                        }
-                    }
-                }
-            }
+            
+          
             .sheet(isPresented: $showExerciseLibrary) {
                 ExerciseLibraryView(workoutViewModel: workoutViewModel) { exercise in
                     addExerciseToWorkout(exercise)
@@ -181,7 +177,13 @@ struct ActiveWorkoutView: View {
             .onDisappear {
                 timer?.invalidate()
             }
-            .environment(\.editMode, isReorganizing ? .constant(.active) : .constant(.inactive))
+            .environment(\.editMode, $editMode)
+            .onChange(of: editMode) { newValue in
+                isReorganizing = (newValue == .active)
+            }
+            .onChange(of: isReorganizing) { newValue in
+                editMode = newValue ? .active : .inactive
+            }
     }
     
     private var headerSection: some View {
@@ -422,9 +424,7 @@ struct ExerciseCard: View {
                 if !isReorganizing {
                     Menu {
                         Button {
-                            withAnimation {
-                                isReorganizing = true
-                            }
+                            isReorganizing = true
                         } label: {
                             Label("Reorganize", systemImage: "arrow.up.arrow.down")
                         }
