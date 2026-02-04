@@ -25,47 +25,77 @@ struct ExerciseDetailView: View {
     private let repsValues: [Int] = Array(0...99)
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Set number
-            Text("Set \(currentSetIndex + 1) of \(exercise.targetSets)")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .padding(.top, 8)
-                .padding(.bottom, 12)
-
-            Spacer()
-
-            // Wheel pickers (touch + crown)
-            pickersSection
-
-            Spacer()
-
-            // Navigation buttons (glass)
-            navigationButtons
-
-            Spacer()
-
-            // Set options label (tap target could open sheet later)
-            Text("Set Options")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .padding(.bottom, 8)
+        List {
+           
+            
+            // Picker card
+       
+            VStack(alignment: .leading, spacing: 12) {
+                    
+                VStack(alignment: .leading, spacing: 4){
+                        Text(exercise.exercise.name)
+                            .font(.system(size: 12))
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        
+                        Text("set \(currentSetIndex + 1)/\(exercise.targetSets)")
+                            .font(.system(size: 10))
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        
+                        
+                    }
+                    
+                    // Pickers - horizontal layout
+                    pickersSection
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color(white: 0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                )
+                .listRowBackground(Color.clear)
+            
+            // Action buttons
+                actionButtonsSection
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 8, trailing: 8))
         }
-        .padding()
-        .background(Color.black)
-        .navigationTitle(exercise.exercise.name)
+        .listStyle(.plain)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 4) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.blue)
-                    Text("\(WatchWorkoutManager.shared.heartRate)")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.blue)
+                VStack(alignment: .trailing){
+                    HStack(spacing: 4) {
+                        
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.red)
+                            .symbolEffect(.bounce.up.byLayer, options: .repeat(.periodic(delay: 0.4)))
+                        Text("\(WatchWorkoutManager.shared.heartRate)")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.red)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.orange)
+                        Text("\(WatchWorkoutManager.shared.calories)")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.orange)
+                    }
                 }
             }
+            
+          
         }
         .onAppear {
             setupInitialValues()
@@ -78,27 +108,33 @@ struct ExerciseDetailView: View {
     // MARK: - Sections
 
     private var pickersSection: some View {
-        HStack(spacing: 16) {
-
-            // WEIGHT (LBS)
+        HStack(spacing: 10) {
+            // WEIGHT
             VStack(spacing: 6) {
-                Text("LBS")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.gray)
+                HStack(spacing: 3) {
+                    Image(systemName: "scalemass")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text("LBS")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundColor(.gray)
 
                 Text(String(format: "%.1f", weightValue))
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(width: 80, height: 50)
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .foregroundColor(focusedWheel == .weight ? .neonGreen : .white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(white: 0.15))
+                            .fill(focusedWheel == .weight ? Color.neonGreen.opacity(0.15) : Color(white: 0.08))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(
-                                focusedWheel == .weight ? Color.neonGreen : Color.white.opacity(0.2),
-                                lineWidth: focusedWheel == .weight ? 1.5 : 1
+                            .strokeBorder(
+                                focusedWheel == .weight ? 
+                                    LinearGradient(colors: [Color.neonGreen, Color.neonGreen.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                    LinearGradient(colors: [Color.white.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: focusedWheel == .weight ? 2.5 : 1
                             )
                     )
                     .focusable(true)
@@ -109,23 +145,30 @@ struct ExerciseDetailView: View {
 
             // REPS
             VStack(spacing: 6) {
-                Text("REPS")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.gray)
+                HStack(spacing: 3) {
+                    Image(systemName: "repeat")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text("REPS")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundColor(.gray)
 
                 Text("\(Int(repsValue))")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(width: 80, height: 50)
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .foregroundColor(focusedWheel == .reps ? .neonGreen : .white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(white: 0.15))
+                            .fill(focusedWheel == .reps ? Color.neonGreen.opacity(0.15) : Color(white: 0.08))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(
-                                focusedWheel == .reps ? Color.neonGreen : Color.white.opacity(0.2),
-                                lineWidth: focusedWheel == .reps ? 1.5 : 1
+                            .strokeBorder(
+                                focusedWheel == .reps ? 
+                                    LinearGradient(colors: [Color.neonGreen, Color.neonGreen.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                    LinearGradient(colors: [Color.white.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: focusedWheel == .reps ? 2.5 : 1
                             )
                     )
                     .focusable(true)
@@ -136,46 +179,123 @@ struct ExerciseDetailView: View {
         }
     }
 
-    private var navigationButtons: some View {
-        HStack(spacing: 12) {
-
-            // Previous set
-            Button(action: previousSet) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 30, height: 30)
-                   
+    private var setProgressIndicator: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<exercise.targetSets, id: \.self) { index in
+                Circle()
+                    .fill(index <= currentSetIndex ? Color.neonGreen : Color.white.opacity(0.2))
+                    .frame(width: index == currentSetIndex ? 6 : 4, height: index == currentSetIndex ? 6 : 4)
+                    .overlay(
+                        Circle()
+                            .stroke(index == currentSetIndex ? Color.neonGreen : Color.clear, lineWidth: 1.5)
+                            .frame(width: 10, height: 10)
+                    )
+                
+                Spacer()
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.secondary)
-            .disabled(currentSetIndex == 0)
-            .opacity(currentSetIndex == 0 ? 0.35 : 1.0)
-
-            // Complete set
-            Button(action: completeSet) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(width: 30, height: 30)
-                    
+        }
+    }
+    
+    private var actionButtonsSection: some View {
+        VStack(spacing: 12) {
+            
+            // Secondary actions
+            HStack(spacing: 10) {
+                // Previous
+                Button(action: previousSet) {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white.opacity(0.9))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(white: 0.16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                                )
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(currentSetIndex == 0)
+                .opacity(currentSetIndex == 0 ? 0.3 : 1.0)
+                
+                // Complete Set (checkmark)
+                Button(action: completeSet) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.neonGreen, Color.neonGreen.opacity(0.85)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .shadow(color: Color.neonGreen.opacity(0.3), radius: 6, x: 0, y: 2)
+                        )
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                
+                // Next
+                Button(action: nextSet) {
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white.opacity(0.9))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(white: 0.16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                                )
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(currentSetIndex >= exercise.targetSets - 1)
+                .opacity(currentSetIndex >= exercise.targetSets - 1 ? 0.3 : 1.0)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.neonGreen)
-
-            // Next set
-            Button(action: nextSet) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 30, height: 30)
-                    
+            // Add Set button
+            Button(action: {
+                // Add new set action
+                completeSet()
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                    Text("Add Set")
+                        .font(.system(size: 15, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color(white: 0.18))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.15), Color.white.opacity(0.05)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1.5
+                                )
+                        )
+                )
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.secondary)
-            .disabled(currentSetIndex >= exercise.targetSets - 1)
-            .opacity(currentSetIndex >= exercise.targetSets - 1 ? 0.35 : 1.0)
+            .buttonStyle(.plain)
+            
+            
         }
     }
 
