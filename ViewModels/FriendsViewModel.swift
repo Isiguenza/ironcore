@@ -107,7 +107,7 @@ class FriendsViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let request = FriendRequest(
+            let request: FriendRequest = FriendRequest(
                 requesterId: nil,
                 addresseeId: addresseeId,
                 status: "pending"
@@ -142,7 +142,7 @@ class FriendsViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            try await dataAPI.delete(
+            let _: [Friendship] = try await dataAPI.delete(
                 table: "friendships",
                 query: ["id": "eq.\(friendship.id)"]
             )

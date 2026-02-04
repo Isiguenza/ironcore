@@ -5,6 +5,8 @@ class NeonAuthService {
     private let baseURL = Config.neonAuthURL
     
     private let urlSession: URLSession
+    private var lastTokenRefresh: Date?
+    private var isRefreshing = false
     
     private init() {
         let configuration = URLSessionConfiguration.default
@@ -158,11 +160,82 @@ class NeonAuthService {
         if let tokenResponse = try? JSONDecoder().decode([String: String].self, from: data),
            let accessToken = tokenResponse["access_token"] ?? tokenResponse["token"] {
             print("✅ [AUTH] Access token found in response body")
+            lastTokenRefresh = Date()
             return accessToken
         }
         
         print("🔴 [AUTH] Access token not found in response")
         throw NeonAuthError.jwtNotFound
+    }
+    
+    /// Refresh the access token using the existing session cookie
+    func refreshToken() async throws -> String {
+        // Prevent concurrent refresh attempts
+        guard !isRefreshing else {
+            print("⏳ [AUTH] Token refresh already in progress, waiting...")
+            try await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second
+            
+            // Check if we have a fresh token now
+            if let token = KeychainStore.shared.getJWT(),
+               let decoded = JWTHelper.decode(token),
+               !decoded.isExpired {
+                print("✅ [AUTH] Fresh token available after waiting")
+                return token
+            }
+            
+            throw NeonAuthError.refreshInProgress
+        }
+        
+        // Check if we refreshed recently (within last 10 seconds) to avoid loops
+        if let lastRefresh = lastTokenRefresh,
+           Date().timeIntervalSince(lastRefresh) < 10 {
+            print("⏳ [AUTH] Token was just refreshed, skipping")
+            if let token = KeychainStore.shared.getJWT() {
+                return token
+            }
+        }
+        
+        isRefreshing = true
+        defer { isRefreshing = false }
+        
+        print("🔄 [AUTH] Refreshing access token...")
+        
+        do {
+            let newToken = try await getAccessToken()
+            
+            // Save the new token
+            try KeychainStore.shared.saveJWT(newToken)
+            print("✅ [AUTH] Token refreshed and saved")
+            
+            // Print token info
+            JWTHelper.printTokenInfo(newToken)
+            
+            return newToken
+        } catch {
+            print("❌ [AUTH] Token refresh failed: \(error)")
+            throw error
+        }
+    }
+    
+    /// Check if the current token needs refresh
+    func shouldRefreshToken() -> Bool {
+        guard let token = KeychainStore.shared.getJWT(),
+              let decoded = JWTHelper.decode(token) else {
+            print("⚠️ [AUTH] No valid token found")
+            return false
+        }
+        
+        if decoded.isExpired {
+            print("⚠️ [AUTH] Token is expired")
+            return true
+        }
+        
+        if decoded.isExpiringSoon {
+            print("⚠️ [AUTH] Token expiring soon")
+            return true
+        }
+        
+        return false
     }
 }
 
@@ -173,6 +246,7 @@ enum NeonAuthError: LocalizedError {
     case sessionFailed
     case jwtNotFound
     case serverError(String)
+    case refreshInProgress
     
     var errorDescription: String? {
         switch self {
@@ -188,6 +262,8 @@ enum NeonAuthError: LocalizedError {
             return "JWT not found in response"
         case .serverError(let message):
             return message
+        case .refreshInProgress:
+            return "Token refresh already in progress"
         }
     }
 }

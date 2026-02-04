@@ -14,6 +14,7 @@ struct RoutineFolder: Identifiable, Codable {
 
 struct ExerciseTab: View {
     @StateObject private var workoutViewModel = WorkoutViewModel()
+    @StateObject private var watchConnectivity = WatchConnectivityManager.shared
     @State private var showRoutineBuilder = false
     @State private var showActiveWorkout = false
     @State private var folders: [RoutineFolder] = []
@@ -26,12 +27,17 @@ struct ExerciseTab: View {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 24) {
+                VStack(spacing: 0) {
+                    // Watch workout banner
+                    WatchWorkoutBanner(showActiveWorkout: $showActiveWorkout)
+                    
+                    ScrollView {
+                        VStack(spacing: 24) {
                         quickStartSection
                         routinesSection
                     }
                     .padding()
+                }
                 }
             }
             .navigationTitle("Exercise")

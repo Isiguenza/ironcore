@@ -17,13 +17,13 @@ class WorkoutViewModel: ObservableObject {
     func deleteRoutine(routineId: String) async {
         do {
             // Delete routine_exercises first (foreign key constraint)
-            try await dataAPI.delete(
+            let _: [RoutineExercise] = try await dataAPI.delete(
                 table: "routine_exercises",
                 query: ["routine_id": "eq.\(routineId)"]
             )
             
             // Delete routine
-            try await dataAPI.delete(
+            let _: [Routine] = try await dataAPI.delete(
                 table: "routines",
                 query: ["id": "eq.\(routineId)"]
             )
@@ -321,23 +321,18 @@ class WorkoutViewModel: ObservableObject {
         var workoutExercises: [ActiveWorkoutExercise] = []
         
         if let routine = routine {
-            workoutExercises = routine.exercises.map { exercise in
-                // Get the full exercise to access gifUrl
-                let fullExercise = exercises.first(where: { $0.id == exercise.exerciseId })
-                
-                // Debug: check if gifUrl is available
-                if let gifUrl = fullExercise?.gifUrl {
-                    print("✅ [WORKOUT] Exercise \(exercise.exerciseName) has gifUrl: \(gifUrl)")
-                } else {
-                    print("⚠️ [WORKOUT] Exercise \(exercise.exerciseName) missing gifUrl (exercise_db_id: \(fullExercise?.exerciseDbId ?? "nil"))")
+            workoutExercises = routine.exercises.compactMap { routineExercise in
+                // Get the full exercise data
+                guard let fullExercise = exercises.first(where: { $0.id == routineExercise.exerciseId }) else {
+                    return nil
                 }
                 
                 return ActiveWorkoutExercise(
-                    exerciseId: exercise.exerciseId,
-                    exerciseName: exercise.exerciseName,
-                    gifUrl: fullExercise?.gifUrl,
-                    targetSets: exercise.targetSets,
-                    restSeconds: exercise.restSeconds,
+                    exercise: fullExercise,
+                    targetSets: routineExercise.targetSets,
+                    targetReps: nil,
+                    targetWeight: routineExercise.targetWeight,
+                    restTime: routineExercise.restSeconds,
                     completedSets: []
                 )
             }
@@ -347,6 +342,7 @@ class WorkoutViewModel: ObservableObject {
             userId: userId,
             routineId: routine?.id,
             routineName: routine?.name,
+            routineDescription: routine?.description,
             startTime: Date(),
             exercises: workoutExercises
         )
@@ -356,11 +352,11 @@ class WorkoutViewModel: ObservableObject {
     
     func addExercise(to workout: inout ActiveWorkout, exercise: Exercise, targetSets: Int = 3, restSeconds: Int = 90) {
         let workoutExercise = ActiveWorkoutExercise(
-            exerciseId: exercise.id,
-            exerciseName: exercise.name,
-            gifUrl: exercise.gifUrl,
+            exercise: exercise,
             targetSets: targetSets,
-            restSeconds: restSeconds,
+            targetReps: nil,
+            targetWeight: nil,
+            restTime: restSeconds,
             completedSets: []
         )
         
@@ -587,31 +583,4 @@ class WorkoutViewModel: ObservableObject {
     }
 }
 
-struct ActiveWorkout {
-    let userId: String
-    let routineId: String?
-    let routineName: String?
-    let startTime: Date
-    var endTime: Date?
-    var exercises: [ActiveWorkoutExercise]
-}
-
-struct ActiveWorkoutExercise: Identifiable {
-    let id = UUID()
-    let exerciseId: String
-    let exerciseName: String
-    let gifUrl: String?
-    let targetSets: Int
-    var restSeconds: Int
-    var completedSets: [CompletedSet]
-}
-
-struct CompletedSet: Identifiable {
-    let id = UUID()
-    let setNumber: Int
-    let weight: Double
-    let reps: Int
-    let setType: SetType
-    let rpe: Int?
-    let completedAt: Date
-}
+// ActiveWorkout, ActiveWorkoutExercise, CompletedSet, and SetType are now in WorkoutModels.swift

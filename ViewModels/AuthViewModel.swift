@@ -12,12 +12,19 @@ class AuthViewModel: ObservableObject {
     
     private let authService = NeonAuthService.shared
     private let dataAPI = NeonDataAPIClient.shared
+    private var tokenRefreshTimer: Timer?
     
     func checkAuthState() {
         print("🔑 [KEYCHAIN] Checking auth state...")
         
         if let token = KeychainStore.shared.getJWT() {
             print("✅ [KEYCHAIN] Token found: \(token.prefix(20))...")
+            JWTHelper.printTokenInfo(token)
+            
+            // Check if token needs refresh
+            Task {
+                await refreshTokenIfNeeded()
+            }
         } else {
             print("❌ [KEYCHAIN] No token found")
         }
@@ -32,11 +39,45 @@ class AuthViewModel: ObservableObject {
             
             isAuthenticated = true
             currentUserId = userId
+            
+            // Start periodic token refresh check
+            startTokenRefreshTimer()
+            
             Task {
                 await loadUserProfile()
             }
         } else {
             print("❌ [KEYCHAIN] No userId found")
+        }
+    }
+    
+    private func startTokenRefreshTimer() {
+        // Check token every 2 minutes
+        tokenRefreshTimer?.invalidate()
+        tokenRefreshTimer = Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.refreshTokenIfNeeded()
+            }
+        }
+    }
+    
+    private func refreshTokenIfNeeded() async {
+        guard authService.shouldRefreshToken() else {
+            return
+        }
+        
+        do {
+            let newToken = try await authService.refreshToken()
+            print("✅ [AUTH] Token auto-refreshed successfully")
+            JWTHelper.printTokenInfo(newToken)
+        } catch {
+            print("❌ [AUTH] Auto-refresh failed: \(error)")
+            // If refresh fails, user might need to sign in again
+            if case NeonAuthError.sessionFailed = error {
+                await MainActor.run {
+                    self.signOut()
+                }
+            }
         }
     }
     
@@ -120,10 +161,14 @@ class AuthViewModel: ObservableObject {
     }
     
     func signOut() {
+        tokenRefreshTimer?.invalidate()
+        tokenRefreshTimer = nil
+        
         try? KeychainStore.shared.clearAll()
         isAuthenticated = false
         currentUserId = nil
         userProfile = nil
+        currentUserName = nil
     }
     
     func loadUserProfile() async {

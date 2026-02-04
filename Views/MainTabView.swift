@@ -47,6 +47,6 @@ struct MainTabView: View {
                 }
                 .tag(5)
         }
-        .accentColor(.neonGreen)
+        //.accentColor(.neonGreen)
     }
 }

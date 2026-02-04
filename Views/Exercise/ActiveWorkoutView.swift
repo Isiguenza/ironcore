@@ -36,8 +36,8 @@ struct ActiveWorkoutView: View {
                                     isReorganizing: $isReorganizing,
                                     onSetComplete: 
 { 
-                                        if exercise.restSeconds > 0 {
-                                            startRestTimer(duration: exercise.restSeconds)
+                                        if exercise.restTime > 0 {
+                                            startRestTimer(duration: exercise.restTime)
                                         }
                                     }
                                 )
@@ -397,7 +397,7 @@ struct ExerciseCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
-                if let gifUrl = exercise.gifUrl, let url = URL(string: gifUrl) {
+                if let gifUrl = exercise.exercise.gifUrl, let url = URL(string: gifUrl) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
@@ -457,7 +457,7 @@ struct ExerciseCard: View {
                         .foregroundColor(.gray)
                     
                     Button(action: { showRestTimePicker = true }) {
-                        Text(exercise.restSeconds == 0 ? "Rest: OFF" : "Rest: \(formatRestTime(exercise.restSeconds))")
+                        Text(exercise.restTime == 0 ? "Rest: OFF" : "Rest: \(formatRestTime(exercise.restTime))")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.neonGreen)
                     }
@@ -568,10 +568,10 @@ struct ExerciseCard: View {
         }
         .sheet(isPresented: $showRestTimePicker) {
             RestTimePicker(restSeconds: Binding(
-                get: { exercise.restSeconds },
+                get: { exercise.restTime },
                 set: { newValue in
                     if var workout = workoutViewModel.activeWorkout {
-                        workout.exercises[exerciseIndex].restSeconds = newValue
+                        workout.exercises[exerciseIndex].restTime = newValue
                         workoutViewModel.activeWorkout = workout
                     }
                 }
@@ -583,7 +583,7 @@ struct ExerciseCard: View {
             ExerciseDetailView(
                 exerciseName: exercise.exerciseName,
                 exerciseId: exercise.exerciseId,
-                gifUrl: exercise.gifUrl
+                gifUrl: exercise.exercise.gifUrl
             )
         }
         .onAppear {

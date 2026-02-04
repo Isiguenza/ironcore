@@ -40,8 +40,9 @@ struct WorkoutExercise: Codable, Identifiable, Hashable {
     }
 }
 
-struct WorkoutSet: Codable, Identifiable, Hashable {
+struct WorkoutSet: Codable, Hashable, Identifiable {
     let id: String
+    let exerciseId: String
     let setNumber: Int
     let weight: Double
     let reps: Int
@@ -53,27 +54,14 @@ struct WorkoutSet: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, weight, reps, rpe
         case setNumber = "set_number"
+        case exerciseId = "exercise_id"
         case setType = "set_type"
         case isPersonalRecord = "is_personal_record"
         case completedAt = "completed_at"
     }
 }
 
-enum SetType: String, Codable, CaseIterable {
-    case warmup = "warmup"
-    case working = "working"
-    case dropset = "dropset"
-    case failure = "failure"
-    
-    var displayName: String {
-        switch self {
-        case .warmup: return "Warm Up"
-        case .working: return "Working"
-        case .dropset: return "Drop Set"
-        case .failure: return "To Failure"
-        }
-    }
-}
+// SetType is now defined in WorkoutModels.swift
 
 struct WorkoutSessionRequest: Codable {
     let userId: String

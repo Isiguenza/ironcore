@@ -18,12 +18,28 @@ class NeonDataAPIClient {
         request.httpMethod = "GET"
         try addAuthHeaders(to: &request)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(response, data: data)
-        
-        let decoder = JSONDecoder.neonDecoder
-        return try decoder.decode([T].self, from: data)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            
+            let decoder = JSONDecoder.neonDecoder
+            return try decoder.decode([T].self, from: data)
+        } catch DataAPIError.unauthorized {
+            // Try to refresh token and retry once
+            print("🔄 [API] Token expired, attempting refresh...")
+            try await NeonAuthService.shared.refreshToken()
+            
+            // Retry with new token
+            request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            try addAuthHeaders(to: &request)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            
+            let decoder = JSONDecoder.neonDecoder
+            return try decoder.decode([T].self, from: data)
+        }
     }
     
     func post<T: Encodable, R: Decodable>(table: String, body: T, prefer: String = "return=representation") async throws -> [R] {
@@ -31,20 +47,39 @@ class NeonDataAPIClient {
             throw DataAPIError.invalidURL
         }
         
+        let encoder = JSONEncoder.neonEncoder
+        let bodyData = try encoder.encode(body)
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         try addAuthHeaders(to: &request)
         request.setValue(prefer, forHTTPHeaderField: "Prefer")
+        request.httpBody = bodyData
         
-        let encoder = JSONEncoder.neonEncoder
-        request.httpBody = try encoder.encode(body)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(response, data: data)
-        
-        let decoder = JSONDecoder.neonDecoder
-        return try decoder.decode([R].self, from: data)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            
+            let decoder = JSONDecoder.neonDecoder
+            return try decoder.decode([R].self, from: data)
+        } catch DataAPIError.unauthorized {
+            // Try to refresh token and retry once
+            print("🔄 [API] Token expired, attempting refresh...")
+            try await NeonAuthService.shared.refreshToken()
+            
+            // Retry with new token
+            request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            try addAuthHeaders(to: &request)
+            request.setValue(prefer, forHTTPHeaderField: "Prefer")
+            request.httpBody = bodyData
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            
+            let decoder = JSONDecoder.neonDecoder
+            return try decoder.decode([R].self, from: data)
+        }
     }
     
     func patch<T: Encodable, R: Decodable>(table: String, body: T, query: [String: String], prefer: String = "return=representation") async throws -> [R] {
@@ -55,23 +90,42 @@ class NeonDataAPIClient {
             throw DataAPIError.invalidURL
         }
         
+        let encoder = JSONEncoder.neonEncoder
+        let bodyData = try encoder.encode(body)
+        
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
         try addAuthHeaders(to: &request)
         request.setValue(prefer, forHTTPHeaderField: "Prefer")
+        request.httpBody = bodyData
         
-        let encoder = JSONEncoder.neonEncoder
-        request.httpBody = try encoder.encode(body)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(response, data: data)
-        
-        let decoder = JSONDecoder.neonDecoder
-        return try decoder.decode([R].self, from: data)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            
+            let decoder = JSONDecoder.neonDecoder
+            return try decoder.decode([R].self, from: data)
+        } catch DataAPIError.unauthorized {
+            // Try to refresh token and retry once
+            print("🔄 [API] Token expired, attempting refresh...")
+            try await NeonAuthService.shared.refreshToken()
+            
+            // Retry with new token
+            request = URLRequest(url: url)
+            request.httpMethod = "PATCH"
+            try addAuthHeaders(to: &request)
+            request.setValue(prefer, forHTTPHeaderField: "Prefer")
+            request.httpBody = bodyData
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            
+            let decoder = JSONDecoder.neonDecoder
+            return try decoder.decode([R].self, from: data)
+        }
     }
     
-    func delete(table: String, query: [String: String]) async throws {
+    func delete<T: Decodable>(table: String, query: [String: String]) async throws -> [T] {
         var components = URLComponents(string: "\(baseURL)/\(table)")!
         components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
         
@@ -83,9 +137,24 @@ class NeonDataAPIClient {
         request.httpMethod = "DELETE"
         try addAuthHeaders(to: &request)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        try handleResponse(response, data: data)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            return []
+        } catch DataAPIError.unauthorized {
+            // Try to refresh token and retry once
+            print("🔄 [API] Token expired, attempting refresh...")
+            try await NeonAuthService.shared.refreshToken()
+            
+            // Retry with new token
+            request = URLRequest(url: url)
+            request.httpMethod = "DELETE"
+            try addAuthHeaders(to: &request)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try handleResponse(response, data: data)
+            return []
+        }
     }
     
     private func addAuthHeaders(to request: inout URLRequest) throws {
@@ -109,6 +178,7 @@ class NeonDataAPIClient {
         
         if httpResponse.statusCode == 401 {
             print("❌ [API] Unauthorized - JWT may be invalid or expired")
+            // Let the caller handle token refresh and retry
             throw DataAPIError.unauthorized
         }
         
