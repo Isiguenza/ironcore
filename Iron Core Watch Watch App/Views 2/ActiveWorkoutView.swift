@@ -7,13 +7,11 @@ struct ActiveWorkoutView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var elapsedTime = 0
     @State private var timer: Timer?
-    @State private var selectedExerciseIndex = 0
-    @State private var showingExerciseDetail = false
     @State private var showingActions = false
     @State private var showingDiscardAlert = false
     
     var body: some View {
-        NavigationStack {
+        
             List {
                 // Header section
                 
@@ -41,6 +39,7 @@ struct ActiveWorkoutView: View {
                                     Image(systemName: "heart.fill")
                                         .font(.system(size: 14))
                                         .foregroundColor(.red)
+                                        .symbolEffect(.bounce.up.byLayer, options: .repeat(.periodic(delay: 0.4)))
                                     Text("\(workoutManager.heartRate)")
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(.red)
@@ -63,10 +62,7 @@ struct ActiveWorkoutView: View {
                 
             
                     ForEach(Array(workoutManager.activeWorkout?.exercises.enumerated() ?? [].enumerated()), id: \.offset) { index, exercise in
-                        Button(action: {
-                            selectedExerciseIndex = index
-                            showingExerciseDetail = true
-                        }) {
+                        NavigationLink(destination: ExerciseDetailView(exercise: exercise, exerciseIndex: index)) {
                             ExerciseRowView(exercise: exercise)
                         }
                         .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
@@ -127,14 +123,6 @@ struct ActiveWorkoutView: View {
             .onDisappear {
                 timer?.invalidate()
             }
-            .sheet(isPresented: $showingExerciseDetail) {
-                if let workout = workoutManager.activeWorkout {
-                    ExerciseDetailView(
-                        exercise: workout.exercises[selectedExerciseIndex],
-                        exerciseIndex: selectedExerciseIndex
-                    )
-                }
-            }
             .sheet(isPresented: $showingActions) {
                 workoutActionsSheet
             }
@@ -147,7 +135,7 @@ struct ActiveWorkoutView: View {
             } message: {
                 Text("Are you sure you want to discard this workout?")
             }
-        }
+        
         .overlay {
             if workoutManager.isResting {
                 RestTimerOverlay()

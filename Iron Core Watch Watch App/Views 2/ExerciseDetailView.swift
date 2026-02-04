@@ -3,72 +3,49 @@ import SwiftUI
 struct ExerciseDetailView: View {
     let exercise: ActiveWorkoutExercise
     let exerciseIndex: Int
-    
+
     @StateObject private var workoutManager = WatchWorkoutManager.shared
     @Environment(\.dismiss) private var dismiss
-    @State private var weight: Double = 0.0
-    @State private var reps: Double = 0.0
+
+    // MARK: - Wheel Picker State
+    @State private var weightValue: Double = 0.0
+    @State private var repsValue: Double = 0.0
+
     @State private var currentSetIndex = 0
     @State private var showingExerciseActions = false
-    @FocusState private var focusedField: Field?
-    
-    enum Field {
+
+    @FocusState private var focusedWheel: WheelField?
+
+    enum WheelField {
         case weight, reps
     }
-    
+
+    // MARK: - Wheel Data
+    private let weightValues: [Double] = stride(from: 0.0, through: 500.0, by: 2.5).map { $0 }
+    private let repsValues: [Int] = Array(0...99)
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header con back button, nombre y heart rate
-            HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(Color(white: 0.2)))
-                }
-                
-                Spacer()
-                
-                // Heart rate
-                HStack(spacing: 4) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.blue)
-                    Text("\(WatchWorkoutManager.shared.heartRate)")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.blue)
-                }
-            }
-            .padding(.horizontal)
-            .padding(.top, 8)
-            
-            // Exercise name and set number
-            VStack(spacing: 4) {
-                Text(exercise.exercise.name)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                
-                Text("Set \(currentSetIndex + 1) of \(exercise.targetSets)")
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray)
-            }
-            .padding(.vertical, 8)
-            
+            // Set number
+            Text("Set \(currentSetIndex + 1) of \(exercise.targetSets)")
+                .font(.system(size: 14))
+                .foregroundColor(.gray)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+
             Spacer()
-            
-            // Weight and Reps pickers
+
+            // Wheel pickers (touch + crown)
             pickersSection
-            
+
             Spacer()
-            
-            // Navigation and complete buttons
+
+            // Navigation buttons (glass)
             navigationButtons
-            
+
             Spacer()
-            
-            // Exercise action text
+
+            // Set options label (tap target could open sheet later)
             Text("Set Options")
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
@@ -76,6 +53,20 @@ struct ExerciseDetailView: View {
         }
         .padding()
         .background(Color.black)
+        .navigationTitle(exercise.exercise.name)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.blue)
+                    Text("\(WatchWorkoutManager.shared.heartRate)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.blue)
+                }
+            }
+        }
         .onAppear {
             setupInitialValues()
         }
@@ -83,101 +74,118 @@ struct ExerciseDetailView: View {
             exerciseActionsSheet
         }
     }
-    
-    
+
+    // MARK: - Sections
+
     private var pickersSection: some View {
-        HStack(spacing: 12) {
-            // Weight Picker
-            VStack(spacing: 4) {
+        HStack(spacing: 16) {
+
+            // WEIGHT (LBS)
+            VStack(spacing: 6) {
                 Text("LBS")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.gray)
-                
-                Text(String(format: "%.1f", weight))
-                    .font(.system(size: 32, weight: .bold))
+
+                Text(String(format: "%.1f", weightValue))
+                    .font(.system(size: 28, weight: .medium))
                     .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 80)
+                    .frame(width: 80, height: 50)
                     .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.blue, lineWidth: 2)
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.black))
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(white: 0.15))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(
+                                focusedWheel == .weight ? Color.neonGreen : Color.white.opacity(0.2),
+                                lineWidth: focusedWheel == .weight ? 1.5 : 1
+                            )
                     )
                     .focusable(true)
-                    .digitalCrownRotation($weight, from: 0.0, through: 500.0, by: 2.5, sensitivity: .medium)
-                    .focused($focusedField, equals: .weight)
+                    .focused($focusedWheel, equals: .weight)
+                    .digitalCrownRotation($weightValue, from: 0.0, through: 500.0, by: 2.5, sensitivity: .medium)
+                    .onTapGesture { focusedWheel = .weight }
             }
-            
-            // Reps Picker
-            VStack(spacing: 4) {
+
+            // REPS
+            VStack(spacing: 6) {
                 Text("REPS")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.gray)
-                
-                Text("\(Int(reps))")
-                    .font(.system(size: 32, weight: .bold))
+
+                Text("\(Int(repsValue))")
+                    .font(.system(size: 28, weight: .medium))
                     .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 80)
+                    .frame(width: 80, height: 50)
                     .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.3), lineWidth: 2)
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.black))
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(white: 0.15))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(
+                                focusedWheel == .reps ? Color.neonGreen : Color.white.opacity(0.2),
+                                lineWidth: focusedWheel == .reps ? 1.5 : 1
+                            )
                     )
                     .focusable(true)
-                    .digitalCrownRotation($reps, from: 0.0, through: 99.0, by: 1.0, sensitivity: .medium)
-                    .focused($focusedField, equals: .reps)
+                    .focused($focusedWheel, equals: .reps)
+                    .digitalCrownRotation($repsValue, from: 1.0, through: 99.0, by: 1.0, sensitivity: .medium)
+                    .onTapGesture { focusedWheel = .reps }
             }
         }
     }
-    
+
     private var navigationButtons: some View {
         HStack(spacing: 12) {
+
             // Previous set
             Button(action: previousSet) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(.white)
-                    .frame(width: 60, height: 60)
-                    .background(Circle().fill(Color(white: 0.2)))
+                    .frame(width: 30, height: 30)
+                   
             }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.secondary)
             .disabled(currentSetIndex == 0)
-            .opacity(currentSetIndex == 0 ? 0.3 : 1.0)
-            
-            // Complete set - Blue checkmark
+            .opacity(currentSetIndex == 0 ? 0.35 : 1.0)
+
+            // Complete set
             Button(action: completeSet) {
                 Image(systemName: "checkmark")
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .background(
-                        RoundedRectangle(cornerRadius: 30)
-                            .fill(Color.blue)
-                    )
+                    .frame(width: 30, height: 30)
+                    
             }
-            
+            .buttonStyle(.borderedProminent)
+            .tint(Color.neonGreen)
+
             // Next set
             Button(action: nextSet) {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(.white)
-                    .frame(width: 60, height: 60)
-                    .background(Circle().fill(Color(white: 0.2)))
+                    .frame(width: 30, height: 30)
+                    
             }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.secondary)
             .disabled(currentSetIndex >= exercise.targetSets - 1)
-            .opacity(currentSetIndex >= exercise.targetSets - 1 ? 0.3 : 1.0)
+            .opacity(currentSetIndex >= exercise.targetSets - 1 ? 0.35 : 1.0)
         }
     }
-    
-    
+
     private var exerciseActionsSheet: some View {
         VStack(spacing: 16) {
             Text("Exercise Options")
                 .font(.headline)
                 .foregroundColor(.white)
                 .padding(.top)
-            
+
             Button(action: {
                 showingExerciseActions = false
                 // TODO: Add exercise
@@ -189,7 +197,8 @@ struct ExerciseDetailView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }
-            
+            .buttonStyle(.plain)
+
             Button(action: {
                 showingExerciseActions = false
                 // TODO: Replace exercise
@@ -201,7 +210,8 @@ struct ExerciseDetailView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }
-            
+            .buttonStyle(.plain)
+
             Button(action: {
                 showingExerciseActions = false
                 // TODO: Delete exercise
@@ -213,45 +223,56 @@ struct ExerciseDetailView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
             }
+            .buttonStyle(.plain)
         }
         .padding()
         .background(Color.black)
     }
-    
+
+    // MARK: - Helpers
+
     private func setupInitialValues() {
         currentSetIndex = exercise.completedSets.count
-        
+
+        let initialWeight: Double
+        let initialReps: Int
+
         if currentSetIndex > 0, let lastSet = exercise.completedSets.last {
-            weight = lastSet.weight
-            reps = Double(lastSet.reps)
+            initialWeight = lastSet.weight
+            initialReps = lastSet.reps
         } else {
-            weight = exercise.targetWeight ?? 0.0
-            reps = Double(exercise.targetReps ?? 10)
+            initialWeight = exercise.targetWeight ?? 0.0
+            initialReps = exercise.targetReps ?? 10
         }
-        
-        focusedField = .weight
+
+        weightValue = initialWeight
+        repsValue = Double(min(max(initialReps, 0), 99))
+
+        focusedWheel = .weight
     }
-    
+
     private func completeSet() {
-        workoutManager.completeSet(exerciseIndex: exerciseIndex, weight: weight, reps: Int(reps))
-        
+        workoutManager.completeSet(exerciseIndex: exerciseIndex, weight: weightValue, reps: Int(repsValue))
+
         if currentSetIndex < exercise.targetSets - 1 {
             currentSetIndex += 1
         } else {
             dismiss()
         }
     }
-    
+
     private func previousSet() {
         if currentSetIndex > 0 {
             currentSetIndex -= 1
+
             if let previousSet = exercise.completedSets[safe: currentSetIndex] {
-                weight = previousSet.weight
-                reps = Double(previousSet.reps)
+                // sync wheels to previous set
+                weightValue = previousSet.weight
+                repsValue = Double(min(max(previousSet.reps, 0), 99))
             }
         }
     }
-    
+
     private func nextSet() {
         if currentSetIndex < exercise.targetSets - 1 {
             currentSetIndex += 1
