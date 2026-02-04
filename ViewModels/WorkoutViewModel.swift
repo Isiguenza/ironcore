@@ -14,6 +14,8 @@ class WorkoutViewModel: ObservableObject {
     let dataAPI = NeonDataAPIClient.shared
     let exerciseDBAPI = ExerciseDBAPIClient.shared
     
+    private let routinesCacheKey = "ios_routines_cache"
+    
     func deleteRoutine(routineId: String) async {
         do {
             // Delete routine_exercises first (foreign key constraint)
@@ -31,6 +33,9 @@ class WorkoutViewModel: ObservableObject {
             // Remove from local state
             routines.removeAll { $0.id == routineId }
             
+            // Actualizar cache
+            saveRoutinesToCache(routines)
+            
             print("✅ [ROUTINE] Deleted routine: \(routineId)")
         } catch {
             errorMessage = error.localizedDescription
@@ -41,6 +46,10 @@ class WorkoutViewModel: ObservableObject {
     func loadRoutines() async {
         guard let userId = KeychainStore.shared.getUserId() else { return }
         
+        // 1. Cargar primero desde cache para mostrar instantáneamente
+        loadCachedRoutines()
+        
+        // 2. Luego actualizar desde BD en background
         isLoading = true
         errorMessage = nil
         
@@ -60,13 +69,43 @@ class WorkoutViewModel: ObservableObject {
             }
             
             routines = loadedRoutines
-            print("✅ [WORKOUT] Loaded \(routines.count) routines")
+            
+            // Guardar en cache
+            saveRoutinesToCache(loadedRoutines)
+            
+            print("✅ [WORKOUT] Loaded and cached \(routines.count) routines from DB")
         } catch {
             errorMessage = error.localizedDescription
             print("❌ [WORKOUT] Failed to load routines: \(error)")
         }
         
         isLoading = false
+    }
+    
+    private func loadCachedRoutines() {
+        guard let data = UserDefaults.standard.data(forKey: routinesCacheKey) else {
+            print("ℹ️ [WORKOUT] No cached routines found")
+            return
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            routines = try decoder.decode([Routine].self, from: data)
+            print("✅ [WORKOUT] Loaded \(routines.count) cached routines (instant)")
+        } catch {
+            print("❌ [WORKOUT] Failed to decode cached routines: \(error)")
+        }
+    }
+    
+    private func saveRoutinesToCache(_ routines: [Routine]) {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(routines)
+            UserDefaults.standard.set(data, forKey: routinesCacheKey)
+            print("💾 [WORKOUT] Routines saved to cache")
+        } catch {
+            print("❌ [WORKOUT] Failed to encode routines for cache: \(error)")
+        }
     }
     
     func loadExercises() async {
@@ -300,6 +339,10 @@ class WorkoutViewModel: ObservableObject {
             
             if let newRoutine = newRoutines.first {
                 routines.append(newRoutine)
+                
+                // Actualizar cache
+                saveRoutinesToCache(routines)
+                
                 print("✅ [WORKOUT] Routine created: \(name)")
             }
         } catch {
