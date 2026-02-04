@@ -1,0 +1,284 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadows}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\definecolor{irongreen}{RGB}{57,255,20}
+\definecolor{ironblack}{RGB}{0,0,0}
+\definecolor{irongray}{RGB}{20,20,20}
+\definecolor{ironlightgray}{RGB}{100,100,100}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=irongreen,
+    filecolor=irongreen,
+    urlcolor=irongreen,
+}
+
+\title{\textcolor{irongreen}{\Huge\textbf{IRON CORE}} \\ \vspace{0.5cm} \Large Identidad de Marca}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Resumen Ejecutivo}
+
+\textbf{Iron Core} es una aplicación de fitness revolucionaria que integra perfectamente el ecosistema de Apple Watch para ofrecer una experiencia de entrenamiento sin precedentes.
+
+\subsection{Propuesta de Valor}
+
+\begin{itemize}
+\item Integración Total Apple Watch
+\item HealthKit Nativo
+\item Sistema LP Gamificado
+\item Base de Datos: 1300+ ejercicios
+\item Red Social Fitness
+\end{itemize}
+
+\section{Identidad Visual}
+
+\subsection{Logotipo}
+
+El logotipo de Iron Core representa una barra de pesas estilizada que simboliza fuerza y tecnología.
+
+\begin{center}
+\begin{tikzpicture}[scale=1.2]
+    \draw[irongreen, line width=3pt] (-2,0) -- (-1,0);
+    \fill[irongreen] (-0.8,0) circle (0.4cm);
+    \draw[irongreen, line width=3pt] (-0.4,0) -- (0.4,0);
+    \fill[irongreen] (0.8,0) circle (0.4cm);
+    \draw[irongreen, line width=3pt] (1.2,0) -- (2,0);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Paleta de Colores}
+
+\begin{center}
+\begin{tikzpicture}
+    \node[rectangle, minimum width=3cm, minimum height=2cm, fill=irongreen] at (0,0) {};
+    \node[below] at (0,-1.5) {\textbf{Neon Green}};
+    \node[below] at (0,-2) {RGB: 57, 255, 20};
+    
+    \node[rectangle, minimum width=3cm, minimum height=2cm, fill=ironblack, draw=white] at (4,0) {};
+    \node[below, color=white] at (4,-1.5) {\textbf{Iron Black}};
+    \node[below, color=white] at (4,-2) {RGB: 0, 0, 0};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Psicología del Color}
+
+\textbf{Neon Green:} Energía explosiva, crecimiento y acción inmediata.
+
+\textbf{Iron Black:} Sofisticación, poder y elegancia premium.
+
+\subsection{Tipografía}
+
+Sistema San Francisco de Apple:
+\begin{itemize}
+\item SF Pro Display para títulos
+\item SF Pro Text para cuerpo
+\item SF Mono para datos numéricos
+\end{itemize}
+
+\section{Filosofía y Valores}
+
+\subsection{Pilar I: Tecnología}
+
+La tecnología debe ser el catalizador del entrenamiento. Iron Core integra Apple Watch y HealthKit para capturar cada métrica con precisión milimétrica.
+
+\textbf{Valores:}
+\begin{itemize}
+\item Precisión en cada dato
+\item Accesibilidad desde la muñeca
+\item Innovación tecnológica constante
+\end{itemize}
+
+\subsection{Pilar II: Comunidad}
+
+El fitness es social. Iron Core integra sistema de amigos y LP (Lift Points) gamificado.
+
+\textbf{Valores:}
+\begin{itemize}
+\item Conexión entre atletas
+\item Competencia sana
+\item Inspiración mutua
+\end{itemize}
+
+\subsection{Pilar III: Excelencia}
+
+Cada pantalla está diseñada con obsesión por los detalles. Negro profundo para enfocar, verde vibrante para motivar.
+
+\textbf{Valores:}
+\begin{itemize}
+\item Diseño intencional
+\item Performance fluido
+\item Personalización total
+\end{itemize}
+
+\subsection{Pilar IV: Conocimiento}
+
+Más de 1,300 ejercicios con GIFs instructivos democratizan el conocimiento fitness.
+
+\textbf{Valores:}
+\begin{itemize}
+\item Transparencia en la técnica
+\item Progresión estructurada
+\item Datos accionables
+\end{itemize}
+
+\subsection{Filosofía: Train Smart. Lift Strong.}
+
+Nuestro tagline encapsula nuestra esencia:
+\begin{itemize}
+\item \textbf{Train Smart:} Tecnología al servicio del progreso
+\item \textbf{Lift Strong:} El esfuerzo real en el gimnasio
+\end{itemize}
+
+\section{Diagrama de Conexiones}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2.5cm,
+    principle/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm, 
+                     text centered, draw=irongreen, fill=irongray, text=white, font=\small\bfseries},
+    visual/.style={ellipse, minimum width=2.5cm, minimum height=1cm, 
+                   text centered, draw=irongreen, fill=ironblack, text=irongreen, font=\small},
+    arrow/.style={-{Stealth[length=3mm]}, irongreen, line width=1.5pt}
+]
+
+\node[principle] (tech) at (0,4) {Innovación};
+\node[principle] (community) at (4,4) {Comunidad};
+\node[principle] (excellence) at (8,4) {Excelencia};
+
+\node[visual] (color) at (0,1.5) {Colores};
+\node[visual] (typo) at (4,1.5) {Tipografía};
+\node[visual] (logo) at (8,1.5) {Logo};
+
+\draw[arrow] (tech) -- (color);
+\draw[arrow] (community) -- (typo);
+\draw[arrow] (excellence) -- (logo);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Explicación}
+
+El Neon Green es futurista y evoca innovación. La tipografía San Francisco es tecnología Apple nativa. El logo representa unión y fuerza compartida.
+
+\section{Diferenciación en el Mercado}
+
+\subsection{Ventajas Competitivas}
+
+\begin{enumerate}
+\item \textbf{Ecosistema Apple-First:} Diseñada desde cero para iPhone + Apple Watch
+\item \textbf{Gamificación Profunda:} Sistema LP convierte entrenamientos en experiencia
+\item \textbf{Identidad Visual Única:} Neon Green sobre negro es instantáneamente reconocible
+\item \textbf{Base de Datos Educativa:} 1300+ ejercicios con GIFs animados
+\end{enumerate}
+
+\subsection{Posicionamiento}
+
+Iron Core se posiciona en la intersección de Fitness, Tecnología y Social.
+
+\textbf{Mensaje clave:} ``Si entrenas con Apple Watch, esta es tu app.''
+
+\subsection{Audiencia Objetivo}
+
+\begin{itemize}
+\item \textbf{Primario:} Hombres 20-40 años, usuarios Apple Watch, gym 3-5 veces/semana
+\item \textbf{Secundario:} Mujeres fitness enthusiasts, crossfitters
+\item \textbf{Terciario:} Principiantes con Apple Watch nuevo
+\end{itemize}
+
+\section{Aplicaciones de la Identidad}
+
+\subsection{Touchpoints}
+
+\begin{enumerate}
+\item \textbf{App Icon:} Fondo negro con logo en Neon Green
+\item \textbf{Splash Screen:} Logo animado con efecto pulse
+\item \textbf{Notificaciones:} Badge verde con mensajes motivadores
+\item \textbf{Apple Watch:} Complicación con LP en tiempo real
+\item \textbf{Marketing:} Website oscuro con animaciones verdes
+\end{enumerate}
+
+\subsection{Copywriting}
+
+\textbf{App Store:}
+
+``Tu Apple Watch. Tu Gimnasio. Tu Progreso. Iron Core transforma cada sesión en una experiencia conectada, precisa y motivadora.''
+
+\subsection{Tono de Voz}
+
+\begin{itemize}
+\item Motivador pero no agresivo
+\item Técnico pero accesible
+\item Inclusivo y personal
+\item Con humor sutil
+\end{itemize}
+
+\section{Roadmap 2026}
+
+\subsection{Fase 1: Lanzamiento (Q1)}
+\begin{itemize}
+\item App iOS con Apple Watch completa
+\item Identidad visual aplicada
+\item Sistema LP funcional
+\item 1,300+ ejercicios
+\end{itemize}
+
+\subsection{Fase 2: Crecimiento (Q2-Q3)}
+\begin{itemize}
+\item Social media con aesthetic consistente
+\item Partnerships con gimnasios
+\item Programa de referidos
+\item Stickers para iMessage
+\end{itemize}
+
+\subsection{Fase 3: Expansión (Q4)}
+\begin{itemize}
+\item Widget iOS Home Screen
+\item Apple Watch complications avanzadas
+\item Siri Shortcuts
+\item Merchandising: camisetas, gorras
+\end{itemize}
+
+\section{Conclusión}
+
+\textbf{Iron Core} es una declaración de principios envuelta en una identidad visual impactante.
+
+Esta identidad nos diferencia porque:
+
+\begin{enumerate}
+\item Es inmediatamente reconocible
+\item Es emocionalmente resonante
+\item Es consistente en todos los touchpoints
+\item Es escalable
+\item Es memorable
+\end{enumerate}
+
+\vspace{2cm}
+
+\begin{center}
+\textcolor{irongreen}{\Huge\textbf{TRAIN SMART.}}
+
+\textcolor{irongreen}{\Huge\textbf{LIFT STRONG.}}
+
+\vspace{0.5cm}
+
+{\Large\textit{Welcome to Iron Core.}}
+\end{center}
+
+\end{document}

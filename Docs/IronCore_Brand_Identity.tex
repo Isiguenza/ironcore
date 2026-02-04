@@ -1,0 +1,737 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadows, calc}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\definecolor{irongreen}{RGB}{57,255,20}
+\definecolor{ironblack}{RGB}{0,0,0}
+\definecolor{irongray}{RGB}{20,20,20}
+\definecolor{ironlightgray}{RGB}{100,100,100}
+\definecolor{ironbg}{RGB}{5,5,5}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{irongreen}{\textbf{Iron Core}}}
+\fancyhead[R]{\textcolor{ironlightgray}{Identidad de Marca}}
+\fancyfoot[C]{\textcolor{ironlightgray}{\thepage}}
+
+\titleformat{\section}
+  {\color{irongreen}\normalfont\Large\bfseries}
+  {\color{irongreen}\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\color{irongreen}\normalfont\large\bfseries}
+  {\color{irongreen}\thesubsection}{1em}{}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=irongreen,
+    filecolor=irongreen,
+    urlcolor=irongreen,
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries\color{irongreen} IRON CORE\par}
+    \vspace{0.5cm}
+    {\Large\color{ironlightgray} Identidad de Marca\par}
+    \vspace{2cm}
+    
+    \begin{tcolorbox}[colback=irongray, colframe=irongreen, width=0.8\textwidth, arc=5mm]
+        \centering
+        \textcolor{white}{\Large\textbf{Tu Entrenamiento.}}\\[0.3cm]
+        \textcolor{irongreen}{\Large\textbf{Tu Progreso.}}\\[0.3cm]
+        \textcolor{white}{\Large\textbf{Tu Comunidad.}}
+    \end{tcolorbox}
+    
+    \vspace{3cm}
+    
+    {\large\color{ironlightgray}
+    Diseño de Identidad Visual Completa\\
+    Filosofía de Marca y Valores\\
+    Sistema de Diseño y Diferenciación de Mercado\par}
+    
+    \vfill
+    
+    {\large\color{ironlightgray}\today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Resumen Ejecutivo}
+
+\textbf{Iron Core} es una aplicación de fitness revolucionaria que integra perfectamente el ecosistema de Apple Watch para ofrecer una experiencia de entrenamiento sin precedentes. Combinando seguimiento en tiempo real, análisis avanzado de métricas y gamificación social, Iron Core transforma cada sesión de entrenamiento en una oportunidad de crecimiento personal y conexión comunitaria.
+
+\subsection{Propuesta de Valor Única}
+
+\begin{itemize}[leftmargin=*, itemsep=10pt]
+    \item \textbf{Integración Total Apple Watch}: Control completo desde la muñeca con sincronización en tiempo real
+    \item \textbf{HealthKit Nativo}: Seguimiento de calorías, frecuencia cardíaca y métricas avanzadas
+    \item \textbf{Sistema LP Gamificado}: Gana puntos de experiencia y compite con tu comunidad
+    \item \textbf{Base de Datos Exhaustiva}: Más de 1300 ejercicios con GIFs instructivos
+    \item \textbf{Red Social Fitness}: Conecta, compite y crece con otros atletas
+\end{itemize}
+
+\newpage
+
+\section{Identidad Visual}
+
+\subsection{Filosofía del Diseño}
+
+La identidad visual de Iron Core se construye sobre tres pilares fundamentales: \textbf{fuerza}, \textbf{tecnología} y \textbf{comunidad}. Cada elemento visual ha sido cuidadosamente diseñado para reflejar la fusión entre el poder del entrenamiento físico y la precisión de la tecnología Apple.
+
+\subsection{Logotipo}
+
+\begin{tcolorbox}[colback=ironblack, colframe=irongreen, width=\textwidth, arc=3mm, boxrule=2pt]
+\centering
+\vspace{1cm}
+
+\begin{tikzpicture}[scale=1.5]
+    \draw[irongreen, line width=3pt, line cap=round] 
+        (-2,0) -- (-1,0);
+    
+    \foreach \x in {-1.8,-1.6,-1.4,-1.2} {
+        \draw[irongreen, line width=2pt] (\x,-0.3) -- (\x,0.3);
+    }
+    
+    \fill[irongreen] (-0.8,0) circle (0.4cm);
+    
+    \draw[irongreen, line width=3pt, line cap=round] 
+        (-0.4,0) -- (0.4,0);
+    
+    \fill[irongreen] (0.8,0) circle (0.4cm);
+    
+    \draw[irongreen, line width=3pt, line cap=round] 
+        (1.2,0) -- (2,0);
+        
+    \foreach \x in {1.2,1.4,1.6,1.8} {
+        \draw[irongreen, line width=2pt] (\x,-0.3) -- (\x,0.3);
+    }
+    
+    \draw[irongreen, line width=2pt, dashed, opacity=0.6] 
+        (0,0.8) circle (0.3cm);
+    \node[irongreen, opacity=0.8] at (0,1.3) {\small WATCH};
+\end{tikzpicture}
+
+\vspace{0.5cm}
+
+{\Huge\color{white}\textbf{IRON}} {\Huge\color{irongreen}\textbf{CORE}}
+
+\vspace{0.3cm}
+{\large\color{ironlightgray}\textit{Train Smart. Lift Strong.}}
+
+\vspace{1cm}
+\end{tcolorbox}
+
+\subsubsection{Concepto del Logotipo}
+
+El logotipo de Iron Core representa una \textbf{barra de pesas estilizada} que simboliza:
+
+\begin{itemize}
+    \item \textbf{La barra central}: Representa el núcleo (core) del usuario y su fortaleza interior
+    \item \textbf{Los discos de peso}: Simbolizan el progreso acumulativo y las metas alcanzadas
+    \item \textbf{Las líneas de textura}: Evocan el grip, el esfuerzo físico y la determinación
+    \item \textbf{El círculo del Watch}: Integración tecnológica y monitoreo continuo
+\end{itemize}
+
+\subsection{Paleta de Colores}
+
+\begin{center}
+\begin{tikzpicture}
+    \node[rectangle, minimum width=3cm, minimum height=2cm, 
+          fill=irongreen, drop shadow] at (0,0) {};
+    \node[below=0.1cm] at (0,-1.2) {\textbf{Neon Green}};
+    \node[below=0.1cm] at (0,-1.6) {\small RGB: 57, 255, 20};
+    \node[below=0.1cm] at (0,-2.0) {\small HEX: \#39FF14};
+    \node[below=0.1cm] at (0,-2.4) {\small\textit{Energía, Acción}};
+    
+    \node[rectangle, minimum width=3cm, minimum height=2cm, 
+          fill=ironblack, draw=white] at (4,0) {};
+    \node[below=0.1cm, color=white] at (4,-1.2) {\textbf{Iron Black}};
+    \node[below=0.1cm, color=white] at (4,-1.6) {\small RGB: 0, 0, 0};
+    \node[below=0.1cm, color=white] at (4,-2.0) {\small HEX: \#000000};
+    \node[below=0.1cm, color=white] at (4,-2.4) {\small\textit{Fuerza, Elegancia}};
+    
+    \node[rectangle, minimum width=3cm, minimum height=2cm, 
+          fill=irongray, drop shadow] at (8,0) {};
+    \node[below=0.1cm, color=white] at (8,-1.2) {\textbf{Iron Gray}};
+    \node[below=0.1cm, color=white] at (8,-1.6) {\small RGB: 20, 20, 20};
+    \node[below=0.1cm, color=white] at (8,-2.0) {\small HEX: \#141414};
+    \node[below=0.1cm, color=white] at (8,-2.4) {\small\textit{Profundidad, Premium}};
+    
+    \node[rectangle, minimum width=3cm, minimum height=2cm, 
+          fill=ironlightgray, drop shadow] at (12,0) {};
+    \node[below=0.1cm, color=white] at (12,-1.2) {\textbf{Steel Gray}};
+    \node[below=0.1cm, color=white] at (12,-1.6) {\small RGB: 100, 100, 100};
+    \node[below=0.1cm, color=white] at (12,-2.0) {\small HEX: \#646464};
+    \node[below=0.1cm, color=white] at (12,-2.4) {\small\textit{Equilibrio, Datos}};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Psicología del Color}
+
+\begin{itemize}
+    \item \textbf{Neon Green}: Color primario que evoca \textit{energía explosiva}, \textit{crecimiento} y \textit{acción inmediata}. Representa el momento del esfuerzo máximo y la superación de límites.
+    
+    \item \textbf{Iron Black}: Fondo principal que proporciona \textit{sofisticación}, \textit{poder} y un lienzo perfecto para que el verde neón brille con intensidad.
+    
+    \item \textbf{Iron Gray}: Tonos intermedios que aportan \textit{profesionalismo} y facilitan la lectura de datos sin fatiga visual.
+    
+    \item \textbf{Steel Gray}: Textos secundarios y elementos informativos que mantienen la jerarquía visual clara.
+\end{itemize}
+
+\subsection{Tipografía}
+
+\begin{tcolorbox}[colback=irongray, colframe=irongreen, width=\textwidth]
+\textcolor{white}{
+\textbf{Sistema Tipográfico San Francisco}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{SF Pro Display} — Títulos y encabezados principales
+    \item \textbf{SF Pro Text} — Cuerpo de texto y contenido general
+    \item \textbf{SF Pro Rounded} — Elementos de gamificación y LP
+    \item \textbf{SF Mono} — Datos numéricos y métricas precisas
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Justificación:}
+La familia San Francisco es el estándar de Apple, garantizando legibilidad óptima en pantallas Retina, consistencia con el ecosistema iOS/watchOS, y una estética moderna y limpia que refuerza nuestra identidad tecnológica.
+}
+\end{tcolorbox}
+
+\subsection{Elementos Gráficos}
+
+\subsubsection{Iconografía}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \draw[irongreen, line width=2pt, rounded corners=5pt] 
+        (0,0) rectangle (2,2);
+    \node[irongreen] at (1,1) {\Large $\heartsuit$};
+    \node[below, ironlightgray] at (1,-0.3) {\small HealthKit};
+    
+    \draw[irongreen, line width=2pt, rounded corners=5pt] 
+        (3,0) rectangle (5,2);
+    \node[irongreen] at (4,1) {\Large $\bigcirc$};
+    \draw[irongreen, line width=1pt] (4,1) circle (0.5cm);
+    \node[below, ironlightgray] at (4,-0.3) {\small Watch};
+    
+    \draw[irongreen, line width=2pt, rounded corners=5pt] 
+        (6,0) rectangle (8,2);
+    \node[irongreen] at (7,1) {\Large $\uparrow$};
+    \node[below, ironlightgray] at (7,-0.3) {\small Progress};
+    
+    \draw[irongreen, line width=2pt, rounded corners=5pt] 
+        (9,0) rectangle (11,2);
+    \node[irongreen] at (10,1) {\Large $\star$};
+    \node[below, ironlightgray] at (10,-0.3) {\small LP System};
+    
+    \draw[irongreen, line width=2pt, rounded corners=5pt] 
+        (12,0) rectangle (14,2);
+    \node[irongreen] at (13,1) {\Large $\equiv$};
+    \node[below, ironlightgray] at (13,-0.3) {\small Routines};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Principios de Iconografía:}
+\begin{itemize}
+    \item Líneas de 2pt para claridad en pantallas pequeñas
+    \item Esquinas redondeadas de 5pt siguiendo iOS design language
+    \item Siempre en Neon Green sobre fondos oscuros para máximo contraste
+    \item Diseño minimalista alineado con SF Symbols de Apple
+\end{itemize}
+
+\subsubsection{Patrones y Texturas}
+
+\begin{center}
+\begin{tikzpicture}
+    \foreach \i in {0,0.5,...,10} {
+        \draw[irongreen, opacity=0.1, line width=1pt] 
+            (\i,0) -- (\i,3);
+    }
+    \foreach \i in {0,0.5,...,3} {
+        \draw[irongreen, opacity=0.1, line width=1pt] 
+            (0,\i) -- (10,\i);
+    }
+    \node[irongreen, opacity=0.8] at (5,1.5) 
+        {\Large\textbf{GRID PATTERN}};
+    \node[ironlightgray] at (5,0.8) 
+        {\small Utilizado en fondos de cards y secciones de datos};
+\end{tikzpicture}
+\end{center}
+
+\newpage
+
+\section{Ensayo: Filosofía y Valores de Iron Core}
+
+\subsection{Introducción: El Núcleo del Cambio}
+
+En un mundo donde la tecnología y el fitness convergen, \textbf{Iron Core} emerge no solo como una aplicación, sino como un \textit{movimiento filosófico} que redefine lo que significa entrenar en la era digital. Nuestro nombre no es casualidad: "Iron" representa la fortaleza inquebrantable, la disciplina del hierro que se forja en el gimnasio; "Core" simboliza el centro, el núcleo desde donde se irradia toda transformación verdadera.
+
+\subsection{Pilar I: Empoderamiento a través de la Tecnología}
+
+La tecnología no debe ser una distracción del entrenamiento, sino su \textbf{catalizador}. En Iron Core, creemos que cada repetición cuenta, cada serie importa, y cada sesión merece ser registrada con precisión milimétrica. La integración con Apple Watch no es una característica más: es nuestra declaración de que el futuro del fitness es \textit{inteligente, conectado y sin fricciones}.
+
+\textbf{Valores Asociados:}
+\begin{itemize}
+    \item \textbf{Precisión}: Cada dato cuenta. HealthKit nos permite capturar calorías, frecuencia cardíaca y esfuerzo real.
+    \item \textbf{Accesibilidad}: Controla tu entrenamiento desde la muñeca, sin romper tu flujo.
+    \item \textbf{Innovación}: Aprovechamos lo último en tecnología wearable para ofrecerte insights imposibles de obtener manualmente.
+\end{itemize}
+
+\subsection{Pilar II: El Poder de la Comunidad}
+
+El fitness es inherentemente \textit{social}. Aunque el esfuerzo es individual, el crecimiento se potencia en comunidad. Iron Core integra un sistema de amigos, desafíos y un \textbf{sistema LP (Lift Points)} gamificado que transforma cada sesión en una oportunidad de competir sanamente y celebrar victorias colectivas.
+
+\textbf{Valores Asociados:}
+\begin{itemize}
+    \item \textbf{Conexión}: Entrena junto a amigos, comparte rutinas, celebra récords personales.
+    \item \textbf{Competencia Sana}: El sistema LP convierte el progreso en un juego, motivándote a mejorar constantemente.
+    \item \textbf{Inspiración Mutua}: Ver el progreso de otros alimenta tu propia determinación.
+\end{itemize}
+
+\subsection{Pilar III: Excelencia en la Experiencia}
+
+Cada pantalla, cada transición, cada interacción en Iron Core está diseñada con \textit{obsesión por los detalles}. Desde el Neon Green que estalla en pantallas OLED hasta las animaciones fluidas que respetan los 60fps nativos de iOS, todo comunica una cosa: \textbf{tú mereces lo mejor}.
+
+\textbf{Valores Asociados:}
+\begin{itemize}
+    \item \textbf{Diseño Intencional}: Cada píxel tiene un propósito. Negro profundo para enfocar, verde vibrante para motivar.
+    \item \textbf{Performance}: Sincronización instantánea Watch-iPhone, carga rápida de ejercicios, navegación sin lag.
+    \item \textbf{Personalización}: Construye tus rutinas, ajusta tus descansos, elige tus métricas.
+\end{itemize}
+
+\subsection{Pilar IV: Conocimiento y Educación}
+
+Iron Core no solo registra entrenamientos: \textit{educa}. Con más de 1,300 ejercicios catalogados, cada uno con GIFs instructivos de la API ExerciseDB, democratizamos el conocimiento que antes solo tenían entrenadores personales de élite.
+
+\textbf{Valores Asociados:}
+\begin{itemize}
+    \item \textbf{Transparencia}: Te mostramos exactamente cómo hacer cada movimiento de forma segura.
+    \item \textbf{Progresión}: Desde principiantes hasta atletas avanzados, todos encuentran su camino.
+    \item \textbf{Datos Accionables}: Histórico completo, análisis de volumen, seguimiento de récords personales.
+\end{itemize}
+
+\subsection{Filosofía de Marca: "Train Smart. Lift Strong."}
+
+Nuestro tagline encapsula todo lo que somos:
+\begin{itemize}
+    \item \textbf{Train Smart}: La tecnología al servicio de tu progreso. Datos precisos, decisiones informadas.
+    \item \textbf{Lift Strong}: El esfuerzo real, el sudor, las barras cargadas. La esencia del entrenamiento de fuerza.
+\end{itemize}
+
+\subsection{Impacto en la Percepción del Consumidor}
+
+\textbf{¿Qué siente el usuario cuando interactúa con Iron Core?}
+
+\begin{enumerate}
+    \item \textbf{Confianza}: La integración nativa con Apple genera credibilidad instantánea.
+    \item \textbf{Motivación}: El Neon Green es energizante, el sistema LP es adictivo.
+    \item \textbf{Pertenencia}: La red social crea una tribu de atletas compartiendo el mismo viaje.
+    \item \textbf{Progreso Tangible}: Los gráficos, las métricas, los récords personales: todo grita "estás mejorando".
+\end{enumerate}
+
+\subsection{Conclusión: El Futuro es Hierro y Silicio}
+
+Iron Core no compite con otras apps de fitness. \textbf{Competimos con la mediocridad}, con las excusas, con la falta de herramientas adecuadas. Somos la respuesta para quienes aman el hierro pero respetan los datos, para quienes entrenan solos pero anhelan comunidad, para quienes usan Apple Watch y merecen una experiencia digna de ese ecosistema.
+
+Cada elemento de nuestra identidad visual refuerza este mensaje: somos \textit{premium sin ser pretenciosos}, \textit{tecnológicos sin ser fríos}, \textit{competitivos sin ser excluyentes}. El negro dice "seriedad", el verde neón grita "acción", y el diseño limpio susurra "esto solo funciona".
+
+\textbf{Iron Core es el futuro del fitness. Y el futuro es ahora.}
+
+\newpage
+
+\section{Diagrama de Conexiones: Identidad Visual × Principios de Marca}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2cm,
+    every node/.style={align=center},
+    principle/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm, 
+                     text centered, draw=irongreen, fill=irongray, text=white, 
+                     font=\small\bfseries, drop shadow},
+    visual/.style={ellipse, minimum width=2.5cm, minimum height=1cm, 
+                   text centered, draw=irongreen, fill=ironblack, text=irongreen, 
+                   font=\small, drop shadow},
+    arrow/.style={-{Stealth[length=3mm]}, irongreen, line width=1.5pt}
+]
+
+\node[principle] (tech) at (0,6) {Innovación\\Tecnológica};
+\node[principle] (community) at (6,6) {Comunidad\\Conectada};
+\node[principle] (excellence) at (12,6) {Excelencia\\en UX};
+\node[principle] (knowledge) at (6,0) {Conocimiento\\Educativo};
+
+\node[visual] (color) at (0,3) {Paleta de\\Colores};
+\node[visual] (typo) at (3,3) {Tipografía\\SF};
+\node[visual] (logo) at (6,3) {Logotipo\\Barra};
+\node[visual] (icons) at (9,3) {Iconografía\\Minimalista};
+\node[visual] (patterns) at (12,3) {Patrones\\Grid};
+
+\draw[arrow] (tech) -- (color);
+\draw[arrow] (tech) -- (typo);
+\draw[arrow] (community) -- (logo);
+\draw[arrow] (community) -- (icons);
+\draw[arrow] (excellence) -- (typo);
+\draw[arrow] (excellence) -- (patterns);
+\draw[arrow] (knowledge) -- (icons);
+\draw[arrow] (knowledge) -- (patterns);
+
+\draw[arrow, dashed, opacity=0.5] (color) -- (community);
+\draw[arrow, dashed, opacity=0.5] (logo) -- (tech);
+\draw[arrow, dashed, opacity=0.5] (icons) -- (excellence);
+\draw[arrow, dashed, opacity=0.5] (patterns) -- (tech);
+
+\node[text=ironlightgray, font=\tiny] at (1.5,4.8) {Neon Green = Energía};
+\node[text=ironlightgray, font=\tiny] at (1.5,4.4) {Negro = Sofisticación};
+
+\node[text=ironlightgray, font=\tiny] at (4.5,4.8) {SF = Apple Native};
+\node[text=ironlightgray, font=\tiny] at (4.5,4.4) {Legibilidad Premium};
+
+\node[text=ironlightgray, font=\tiny] at (7.5,4.8) {Barra = Fuerza};
+\node[text=ironlightgray, font=\tiny] at (7.5,4.4) {Watch = Tech};
+
+\node[text=ironlightgray, font=\tiny] at (10.5,4.8) {Símbolos Claros};
+\node[text=ironlightgray, font=\tiny] at (10.5,4.4) {iOS Standards};
+
+\node[text=ironlightgray, font=\tiny] at (13.5,4.8) {Estructura};
+\node[text=ironlightgray, font=\tiny] at (13.5,4.4) {Datos Organizados};
+
+\end{tikzpicture}
+\end{center}
+
+\subsection{Explicación del Diagrama}
+
+\textbf{Conexiones Primarias (Flechas Sólidas):}
+\begin{itemize}
+    \item \textbf{Innovación → Colores/Tipografía}: El Neon Green es futurista, SF es tecnología Apple nativa.
+    \item \textbf{Comunidad → Logo/Iconos}: El logo representa unión (barra compartida), los iconos facilitan comunicación rápida.
+    \item \textbf{Excelencia → Tipografía/Patrones}: SF garantiza legibilidad óptima, patrones organizan información.
+    \item \textbf{Conocimiento → Iconos/Patrones}: Iconos educan visualmente, grids estructuran datos complejos.
+\end{itemize}
+
+\textbf{Conexiones Secundarias (Flechas Punteadas):}
+\begin{itemize}
+    \item \textbf{Colores ↔ Comunidad}: El verde vibrante atrae y unifica visualmente a la comunidad.
+    \item \textbf{Logo ↔ Tecnología}: El círculo del Watch en el logo es pura innovación.
+    \item \textbf{Iconos ↔ Excelencia}: Iconografía limpia = experiencia pulida.
+    \item \textbf{Patrones ↔ Tecnología}: Grids evocan código, datos, precisión digital.
+\end{itemize}
+
+\newpage
+
+\section{Diferenciación en el Mercado}
+
+\subsection{Análisis Competitivo}
+
+\begin{tcolorbox}[colback=irongray, colframe=irongreen, title=\textcolor{white}{\textbf{Iron Core vs. Competencia}}]
+\textcolor{white}{
+\begin{tabular}{p{4cm}p{3.5cm}p{3.5cm}}
+\textbf{Característica} & \textbf{Iron Core} & \textbf{Competidores} \\[5pt]
+\hline\\[-8pt]
+Integración Watch & Nativa, total & Básica o nula \\[5pt]
+HealthKit & Completo & Parcial \\[5pt]
+Base de datos & 1300+ ejercicios & 100-300 \\[5pt]
+Sistema social & LP gamificado & Likes simples \\[5pt]
+Diseño & Dark + Neon & Colores pastel \\[5pt]
+Sincronización & Tiempo real & Diferida \\[5pt]
+Público objetivo & Apple fanáticos & General \\[5pt]
+\end{tabular}
+}
+\end{tcolorbox}
+
+\subsection{Ventajas Competitivas Clave}
+
+\begin{enumerate}
+    \item \textbf{Ecosistema Apple-First}
+    \begin{itemize}
+        \item Diseñada desde cero para iPhone + Apple Watch
+        \item Aprovecha HealthKit, WatchConnectivity, SF Symbols
+        \item No es un port de Android: es iOS puro
+    \end{itemize}
+    
+    \item \textbf{Gamificación Profunda}
+    \begin{itemize}
+        \item Sistema LP que convierte entrenamientos en puntos de experiencia
+        \item Récords personales con celebraciones visuales
+        \item Competencia amistosa en leaderboards
+    \end{itemize}
+    
+    \item \textbf{Identidad Visual Única}
+    \begin{itemize}
+        \item Neon Green sobre negro: nadie más lo usa en fitness
+        \item Evoca clubes nocturnos, energía nocturna, cultura urbana
+        \item Instantáneamente reconocible en el App Store
+    \end{itemize}
+    
+    \item \textbf{Base de Datos Educativa}
+    \begin{itemize}
+        \item Cada ejercicio con GIF animado
+        \item Filtros por músculo, equipo, dificultad
+        \item API ExerciseDB constantemente actualizada
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Posicionamiento de Marca}
+
+\textbf{Iron Core se posiciona en la intersección de:}
+
+\begin{center}
+\begin{tikzpicture}
+    \draw[irongreen, line width=2pt, fill=irongray, opacity=0.8] 
+        (0,0) circle (2cm);
+    \node[text=white] at (0,0) {\textbf{Fitness}};
+    
+    \draw[irongreen, line width=2pt, fill=irongray, opacity=0.8] 
+        (3,0) circle (2cm);
+    \node[text=white] at (3,0) {\textbf{Tech}};
+    
+    \draw[irongreen, line width=2pt, fill=irongray, opacity=0.8] 
+        (1.5,-2) circle (2cm);
+    \node[text=white] at (1.5,-2) {\textbf{Social}};
+    
+    \fill[irongreen, opacity=0.3] (1.5,-0.7) circle (0.8cm);
+    \node[text=white, font=\bfseries] at (1.5,-0.7) {IRON\\CORE};
+\end{tikzpicture}
+\end{center}
+
+\subsection{Mensaje para el Mercado}
+
+\begin{tcolorbox}[colback=ironblack, colframe=irongreen, arc=5mm]
+\centering
+\textcolor{irongreen}{\Large\textbf{``Si entrenas con Apple Watch, esta es tu app.''}}
+\end{tcolorbox}
+
+\textbf{Segmentación de Audiencia:}
+\begin{itemize}
+    \item \textbf{Primario}: Hombres 20-40 años, usuarios de Apple Watch, van al gimnasio 3-5 veces/semana
+    \item \textbf{Secundario}: Mujeres fitness enthusiasts, crossfitters, atletas aficionados
+    \item \textbf{Terciario}: Principiantes que acaban de comprar Apple Watch y buscan sacarle provecho
+\end{itemize}
+
+\newpage
+
+\section{Aplicaciones de la Identidad}
+
+\subsection{Touchpoints de Marca}
+
+\begin{enumerate}
+    \item \textbf{App Icon}
+    \begin{itemize}
+        \item Fondo negro sólido con el logo de barra en Neon Green
+        \item Reconocible incluso a 60x60 píxeles
+        \item Contraste máximo en Home Screen
+    \end{itemize}
+    
+    \item \textbf{Splash Screen}
+    \begin{itemize}
+        \item Logo animado con efecto "pulse" (latido de corazón)
+        \item Transición fluida de negro a la interfaz principal
+        \item Duración: 1.5 segundos máximo
+    \end{itemize}
+    
+    \item \textbf{Notificaciones}
+    \begin{itemize}
+        \item Badge en Neon Green con números blancos
+        \item Mensajes: "¡Tu amigo acaba de lograr un PR!" en tono motivador
+        \item Iconos personalizados por tipo de notificación
+    \end{itemize}
+    
+    \item \textbf{Apple Watch Faces}
+    \begin{itemize}
+        \item Complicación con LP actual en verde brillante
+        \item Vista de workout activo con calorías y tiempo
+        \item Color dominante: verde para mantener consistencia
+    \end{itemize}
+    
+    \item \textbf{Marketing Digital}
+    \begin{itemize}
+        \item Website oscuro con animaciones verdes
+        \item App Store screenshots con interfaz real, no mockups
+        \item Videos demo con música electrónica energética
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Ejemplos de Copywriting}
+
+\textbf{App Store Description Opening:}
+\begin{tcolorbox}[colback=irongray, colframe=irongreen]
+\textcolor{white}{
+\textit{``Tu Apple Watch. Tu Gimnasio. Tu Progreso.''}
+
+Iron Core transforma cada sesión de entrenamiento en una experiencia conectada, precisa y motivadora. Registra cada set desde la muñeca, compite con amigos en tiempo real, y conquista más de 1,300 ejercicios con guías visuales.
+
+\textbf{Train Smart. Lift Strong.}
+}
+\end{tcolorbox}
+
+\textbf{Onboarding Messages:}
+\begin{itemize}
+    \item Pantalla 1: \textit{``Bienvenido al futuro del fitness''}
+    \item Pantalla 2: \textit{``Conecta tu Apple Watch y desbloquea el poder del seguimiento en tiempo real''}
+    \item Pantalla 3: \textit{``Únete a la comunidad Iron Core. Porque los lobos no cazan solos.''}
+\end{itemize}
+
+\subsection{Tono de Voz}
+
+\textbf{Características del Tono Iron Core:}
+\begin{itemize}
+    \item \textbf{Motivador pero no agresivo}: ``Vamos, una serie más'' en vez de ``¡Muévete, flojo!''
+    \item \textbf{Técnico pero accesible}: Usamos términos correctos (series, repeticiones) sin jerga innecesaria
+    \item \textbf{Inclusivo}: ``Tu progreso'' no ``el progreso''. Personal, nunca genérico.
+    \item \textbf{Con humor sutil}: Mensajes de error: ``Ups, algo salió mal. Incluso Ronnie Coleman tiene días malos.''
+\end{itemize}
+
+\newpage
+
+\section{Guía de Uso}
+
+\subsection{Normas de Aplicación}
+
+\textbf{Uso Correcto del Logo:}
+\begin{itemize}
+    \item Siempre sobre fondo negro o gris oscuro (nunca blanco)
+    \item Espacio mínimo de respiro: 20\% del ancho del logo alrededor
+    \item Nunca distorsionar, rotar o cambiar colores
+    \item Tamaño mínimo: 40px de ancho en digital
+\end{itemize}
+
+\textbf{Uso Correcto del Color:}
+\begin{itemize}
+    \item Neon Green exclusivo para CTAs, highlights, estados activos
+    \item Nunca usar verde para mensajes de error (usar rojo estándar iOS)
+    \item Ratio mínimo de contraste: 7:1 (WCAG AAA)
+    \item Backgrounds siempre en Iron Black o Iron Gray
+\end{itemize}
+
+\textbf{Uso Correcto de Tipografía:}
+\begin{itemize}
+    \item Títulos principales: SF Pro Display Bold, 24-34pt
+    \item Subtítulos: SF Pro Text Semibold, 16-20pt
+    \item Cuerpo: SF Pro Text Regular, 14-17pt
+    \item Datos numéricos: SF Mono Medium, 16-24pt
+    \item Siempre Dynamic Type compatible para accesibilidad
+\end{itemize}
+
+\subsection{Usos Prohibidos}
+
+\begin{center}
+\begin{tikzpicture}
+    \node[rectangle, draw=red, line width=2pt, fill=white, minimum width=3cm, minimum height=2cm] at (0,0) {};
+    \node[rotate=45, red, font=\Large\bfseries] at (0,0) {NUNCA};
+    \node[below, red] at (0,-1.5) {\small Logo sobre blanco};
+    
+    \node[rectangle, draw=red, line width=2pt, fill=white, minimum width=3cm, minimum height=2cm] at (4,0) {};
+    \node[rotate=45, red, font=\Large\bfseries] at (4,0) {NUNCA};
+    \node[below, red] at (4,-1.5) {\small Colores alterados};
+    
+    \node[rectangle, draw=red, line width=2pt, fill=white, minimum width=3cm, minimum height=2cm] at (8,0) {};
+    \node[rotate=45, red, font=\Large\bfseries] at (8,0) {NUNCA};
+    \node[below, red] at (8,-1.5) {\small Logo distorsionado};
+\end{tikzpicture}
+\end{center}
+
+\newpage
+
+\section{Roadmap de Implementación}
+
+\subsection{Fase 1: Lanzamiento (Q1 2026)}
+\begin{itemize}
+    \item[$\checkmark$] App iOS con integración Apple Watch completa
+    \item[$\checkmark$] Identidad visual aplicada en todos los touchpoints
+    \item[$\checkmark$] Sistema LP funcional con leaderboards
+    \item[$\checkmark$] Base de datos de 1,300+ ejercicios con GIFs
+\end{itemize}
+
+\subsection{Fase 2: Crecimiento (Q2-Q3 2026)}
+\begin{itemize}
+    \item Social media: Instagram, TikTok con aesthetic consistente
+    \item Partnerships con gimnasios que usen Apple Watch
+    \item Programa de referidos: ``Invita a un compañero de gym''
+    \item Stickers de Iron Core para iMessage
+\end{itemize}
+
+\subsection{Fase 3: Expansión (Q4 2026)}
+\begin{itemize}
+    \item Widget de iOS Home Screen con stats en tiempo real
+    \item Apple Watch complications avanzadas
+    \item Siri Shortcuts: ``Empezar rutina de pierna''
+    \item Merchandising: camisetas, gorras con logo Neon Green
+\end{itemize}
+
+\subsection{Métricas de Éxito}
+
+\begin{center}
+\begin{tabular}{lc}
+\textbf{KPI} & \textbf{Meta Q4 2026} \\
+\hline
+Descargas & 100,000+ \\
+Usuarios activos mensuales & 25,000+ \\
+Apple Watch adoption & 80\%+ \\
+Sesiones por usuario/mes & 12+ \\
+Retención D30 & 40\%+ \\
+NPS (Net Promoter Score) & 50+ \\
+\end{tabular}
+\end{center}
+
+\newpage
+
+\section{Conclusión}
+
+\textbf{Iron Core} no es simplemente una app de fitness. Es una \textit{declaración de principios}, una \textit{filosofía de vida} envuelta en una identidad visual impactante y una experiencia de usuario excepcional.
+
+Cada decisión de diseño, desde el Neon Green que pulsa con energía hasta la tipografía San Francisco que respira Apple, está meticulosamente calibrada para comunicar un mensaje claro:
+
+\begin{center}
+\begin{tcolorbox}[colback=ironblack, colframe=irongreen, width=0.9\textwidth, arc=8mm, boxrule=3pt]
+\centering
+\textcolor{white}{\Large ``Somos la aplicación que los usuarios de Apple Watch''}\\[0.3cm]
+\textcolor{irongreen}{\Large\textbf{``merecen tener para sus entrenamientos.''}}
+\end{tcolorbox}
+\end{center}
+
+\vspace{1cm}
+
+\textbf{Esta identidad de marca nos diferencia porque:}
+
+\begin{enumerate}[leftmargin=*, itemsep=8pt]
+    \item Es \textbf{inmediatamente reconocible} — El Neon Green sobre negro no se confunde con nadie
+    \item Es \textbf{emocionalmente resonante} — Evoca energía, fuerza, tecnología y comunidad
+    \item Es \textbf{consistente en todos los touchpoints} — Del icono al Watch face, todo es coherente
+    \item Es \textbf{escalable} — Funciona en 40px y en vallas publicitarias
+    \item Es \textbf{memorable} — Una vez que ves Iron Core, no lo olvidas
+\end{enumerate}
+
+\vspace{1cm}
+
+\textbf{El mercado del fitness digital es ruidoso.} Hay cientos de apps compitiendo por atención. Pero muy pocas tienen una identidad tan fuerte, una integración tan profunda con el ecosistema Apple, y una visión tan clara de lo que significa entrenar en 2026.
+
+\textbf{Iron Core es esa excepción.}
+
+Y esta identidad de marca, con cada color, cada línea, cada palabra, nos asegura que cuando un usuario busque "la mejor app de gym para Apple Watch", nos encuentre. Y cuando nos encuentre, \textit{nunca nos olvide}.
+
+\vspace{2cm}
+
+\begin{center}
+\textcolor{irongreen}{\Huge\textbf{TRAIN SMART.}}\\[0.3cm]
+\textcolor{irongreen}{\Huge\textbf{LIFT STRONG.}}\\[0.5cm]
+\textcolor{ironlightgray}{\Large\textit{Welcome to Iron Core.}}
+\end{center}
+
+\end{document}

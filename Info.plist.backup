@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>NEON_DATA_API_URL</key>
+	<string>https://ep-soft-frost-ah5hpy9a.apirest.c-3.us-east-1.aws.neon.tech/neondb/rest/v1</string>
+	<key>NEON_AUTH_URL</key>
+	<string>https://ep-soft-frost-ah5hpy9a.neonauth.c-3.us-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>IRONCORE needs access to your health data to calculate your weekly fitness score based on workouts, active energy, and sleep.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>IRONCORE needs permission to access your health data.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+</dict>
+</plist>
