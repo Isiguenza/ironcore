@@ -125,17 +125,43 @@ struct ExerciseDetailView: View {
         .onAppear {
             setupInitialValues()
         }
+        .onChange(of: workoutManager.isResting) { isResting in
+            // Cuando el rest timer termina naturalmente, cerrar el overlay
+            if !isResting && showingRestTimer {
+                showingRestTimer = false
+            }
+        }
         .onChange(of: currentExerciseIndex) { _ in
             // Solo actualizar los valores del picker, NO cambiar currentSetIndex
             // El currentSetIndex ya se maneja correctamente en nextSet/previousSet/completeSet
             setupInitialValues()
         }
+        .scrollDisabled(focusedWheel != nil)
+        .onDisappear {
+            // Limpiar estado del rest timer al salir
+            showingRestTimer = false
+        }
         .sheet(isPresented: $showingExerciseActions) {
             exerciseActionsSheet
         }
         .fullScreenCover(isPresented: $showingRestTimer) {
-            RestTimerOverlay()
-                .interactiveDismissDisabled()
+            ZStack(alignment: .topTrailing) {
+                RestTimerOverlay()
+                
+                // Botón X para cerrar y omitir
+                Button(action: {
+                    workoutManager.skipRest()
+                    showingRestTimer = false
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.white.opacity(0.8))
+                        .background(Circle().fill(Color.black.opacity(0.3)))
+                }
+                .buttonStyle(.plain)
+                .padding(16)
+            }
+            .interactiveDismissDisabled()
         }
     }
 
@@ -154,7 +180,7 @@ struct ExerciseDetailView: View {
                 .foregroundColor(.gray)
 
                 Text(String(format: "%.1f", weightValue))
-                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(focusedWheel == .weight ? .neonGreen : .white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -177,7 +203,16 @@ struct ExerciseDetailView: View {
                         }
                     }
                     .focused($focusedWheel, equals: .weight)
-                    .digitalCrownRotation($weightValue, from: 0.0, through: 500.0, by: 2.5, sensitivity: .medium)
+                    .digitalCrownRotation($weightValue, from: 0.0, through: 500.0, by: 0.5, sensitivity: .low, isContinuous: false)
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                focusedWheel = .weight
+                                let delta = -value.translation.height / 10.0
+                                let newValue = weightValue + (delta * 0.5)
+                                weightValue = max(0.0, min(500.0, newValue))
+                            }
+                    )
                     .onTapGesture { 
                         focusedWheel = .weight
                     }
@@ -194,7 +229,7 @@ struct ExerciseDetailView: View {
                 .foregroundColor(.gray)
 
                 Text("\(Int(repsValue))")
-                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(focusedWheel == .reps ? .neonGreen : .white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -217,7 +252,16 @@ struct ExerciseDetailView: View {
                         }
                     }
                     .focused($focusedWheel, equals: .reps)
-                    .digitalCrownRotation($repsValue, from: 1.0, through: 99.0, by: 1.0, sensitivity: .medium)
+                    .digitalCrownRotation($repsValue, from: 1.0, through: 99.0, by: 1.0, sensitivity: .low, isContinuous: false)
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                focusedWheel = .reps
+                                let delta = -value.translation.height / 10.0
+                                let newValue = repsValue + delta
+                                repsValue = max(1.0, min(99.0, newValue))
+                            }
+                    )
                     .onTapGesture { 
                         focusedWheel = .reps
                     }
@@ -246,7 +290,7 @@ struct ExerciseDetailView: View {
         VStack(spacing: 12) {
             
             // Secondary actions
-            HStack(spacing: 5) {
+            HStack(spacing: 3) {
                 // Previous
                 Button(action: previousSet) {
                     Image(systemName: "arrow.left")
