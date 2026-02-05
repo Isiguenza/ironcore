@@ -7,14 +7,24 @@ struct ExerciseDetailView: View {
     @StateObject private var workoutManager = WatchWorkoutManager.shared
     @Environment(\.dismiss) private var dismiss
 
+    // MARK: - Exercise Navigation State
+    @State private var currentExerciseIndex: Int
+    
     // MARK: - Wheel Picker State
     @State private var weightValue: Double = 0.0
     @State private var repsValue: Double = 0.0
 
     @State private var currentSetIndex = 0
     @State private var showingExerciseActions = false
+    @State private var showingRestTimer = false
 
     @FocusState private var focusedWheel: WheelField?
+    
+    init(exercise: ActiveWorkoutExercise, exerciseIndex: Int) {
+        self.exercise = exercise
+        self.exerciseIndex = exerciseIndex
+        _currentExerciseIndex = State(initialValue: exerciseIndex)
+    }
 
     enum WheelField {
         case weight, reps
@@ -100,8 +110,14 @@ struct ExerciseDetailView: View {
         .onAppear {
             setupInitialValues()
         }
+        .onChange(of: currentExerciseIndex) { _ in
+            setupInitialValues()
+        }
         .sheet(isPresented: $showingExerciseActions) {
             exerciseActionsSheet
+        }
+        .fullScreenCover(isPresented: $showingRestTimer) {
+            RestTimerOverlay()
         }
     }
 
@@ -352,17 +368,21 @@ struct ExerciseDetailView: View {
     // MARK: - Helpers
 
     private func setupInitialValues() {
-        currentSetIndex = exercise.completedSets.count
+        guard let workout = workoutManager.activeWorkout,
+              currentExerciseIndex < workout.exercises.count else { return }
+        
+        let currentExercise = workout.exercises[currentExerciseIndex]
+        currentSetIndex = currentExercise.completedSets.count
 
         let initialWeight: Double
         let initialReps: Int
 
-        if currentSetIndex > 0, let lastSet = exercise.completedSets.last {
+        if currentSetIndex > 0, let lastSet = currentExercise.completedSets.last {
             initialWeight = lastSet.weight
             initialReps = lastSet.reps
         } else {
-            initialWeight = exercise.targetWeight ?? 0.0
-            initialReps = exercise.targetReps ?? 10
+            initialWeight = currentExercise.targetWeight ?? 0.0
+            initialReps = currentExercise.targetReps ?? 10
         }
 
         weightValue = initialWeight
@@ -372,20 +392,47 @@ struct ExerciseDetailView: View {
     }
 
     private func completeSet() {
-        workoutManager.completeSet(exerciseIndex: exerciseIndex, weight: weightValue, reps: Int(repsValue))
+        guard let workout = workoutManager.activeWorkout,
+              currentExerciseIndex < workout.exercises.count else { return }
+        
+        let currentExercise = workout.exercises[currentExerciseIndex]
+        workoutManager.completeSet(exerciseIndex: currentExerciseIndex, weight: weightValue, reps: Int(repsValue))
 
-        if currentSetIndex < exercise.targetSets - 1 {
+        if currentSetIndex < currentExercise.targetSets - 1 {
+            // Avanzar al siguiente set del mismo ejercicio
             currentSetIndex += 1
+            
+            // Mostrar rest timer
+            if currentExercise.restTime > 0 {
+                showingRestTimer = true
+            }
         } else {
-            dismiss()
+            // Último set del ejercicio completado
+            if currentExerciseIndex < workout.exercises.count - 1 {
+                // Hay más ejercicios, avanzar al siguiente
+                currentExerciseIndex += 1
+                
+                // Mostrar rest timer antes del siguiente ejercicio
+                if currentExercise.restTime > 0 {
+                    showingRestTimer = true
+                }
+            } else {
+                // Era el último ejercicio, cerrar
+                dismiss()
+            }
         }
     }
 
     private func previousSet() {
+        guard let workout = workoutManager.activeWorkout,
+              currentExerciseIndex < workout.exercises.count else { return }
+        
+        let currentExercise = workout.exercises[currentExerciseIndex]
+        
         if currentSetIndex > 0 {
             currentSetIndex -= 1
 
-            if let previousSet = exercise.completedSets[safe: currentSetIndex] {
+            if let previousSet = currentExercise.completedSets[safe: currentSetIndex] {
                 // sync wheels to previous set
                 weightValue = previousSet.weight
                 repsValue = Double(min(max(previousSet.reps, 0), 99))
@@ -394,7 +441,12 @@ struct ExerciseDetailView: View {
     }
 
     private func nextSet() {
-        if currentSetIndex < exercise.targetSets - 1 {
+        guard let workout = workoutManager.activeWorkout,
+              currentExerciseIndex < workout.exercises.count else { return }
+        
+        let currentExercise = workout.exercises[currentExerciseIndex]
+        
+        if currentSetIndex < currentExercise.targetSets - 1 {
             currentSetIndex += 1
         }
     }
