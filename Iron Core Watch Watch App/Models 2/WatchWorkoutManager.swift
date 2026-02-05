@@ -13,11 +13,13 @@ class WatchWorkoutManager: NSObject, ObservableObject {
     @Published var calories: Int = 0
     @Published var isResting = false
     @Published var restTimeRemaining = 0
+    @Published var additionalSetsByExercise: [Int: Int] = [:] // exerciseIndex: additionalSetsCount
     
     private let healthStore = HKHealthStore()
     private var workoutSession: HKWorkoutSession?
     private var workoutBuilder: HKLiveWorkoutBuilder?
     private var startDate: Date?
+    private var restTimer: Timer?
     
     private let routinesCacheKey = "watch_routines_cache"
     
@@ -170,6 +172,7 @@ class WatchWorkoutManager: NSObject, ObservableObject {
         activeWorkout = nil
         heartRate = 0
         calories = 0
+        additionalSetsByExercise.removeAll()
         
         print("✅ [WATCH] Workout finished")
     }
@@ -180,6 +183,7 @@ class WatchWorkoutManager: NSObject, ObservableObject {
         activeWorkout = nil
         heartRate = 0
         calories = 0
+        additionalSetsByExercise.removeAll()
         
         print("✅ [WATCH] Workout discarded")
     }
@@ -242,13 +246,33 @@ class WatchWorkoutManager: NSObject, ObservableObject {
         print("🔄 [WATCH] Set \(setIndex) removed from exercise \(exerciseIndex)")
     }
     
+    func addSetSlot(exerciseIndex: Int) {
+        additionalSetsByExercise[exerciseIndex, default: 0] += 1
+        print("➕ [WATCH] Added set slot to exercise \(exerciseIndex). Total additional sets: \(additionalSetsByExercise[exerciseIndex] ?? 0)")
+    }
+    
+    func getTotalSets(for exerciseIndex: Int) -> Int {
+        guard let workout = activeWorkout,
+              exerciseIndex < workout.exercises.count else { return 0 }
+        
+        let exercise = workout.exercises[exerciseIndex]
+        let additionalSets = additionalSetsByExercise[exerciseIndex] ?? 0
+        
+        // Total sets = target + additional, pero al menos igual a completedSets.count
+        return max(exercise.targetSets + additionalSets, exercise.completedSets.count)
+    }
+    
     // MARK: - Rest Timer
     
     func startRestTimer(duration: Int) {
+        // Invalidar timer anterior si existe
+        restTimer?.invalidate()
+        restTimer = nil
+        
         isResting = true
         restTimeRemaining = duration
         
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+        restTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
             Task { @MainActor in
                 guard let self = self else {
                     timer.invalidate()
@@ -260,12 +284,15 @@ class WatchWorkoutManager: NSObject, ObservableObject {
                 if self.restTimeRemaining <= 0 {
                     timer.invalidate()
                     self.isResting = false
+                    self.restTimer = nil
                 }
             }
         }
     }
     
     func skipRest() {
+        restTimer?.invalidate()
+        restTimer = nil
         isResting = false
         restTimeRemaining = 0
     }
