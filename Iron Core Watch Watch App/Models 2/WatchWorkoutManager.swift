@@ -214,6 +214,34 @@ class WatchWorkoutManager: NSObject, ObservableObject {
         print("✅ [WATCH] Set completed: \(weight)lbs x \(reps) reps")
     }
     
+    func removeLastCompletedSet(exerciseIndex: Int) {
+        guard var workout = activeWorkout else { return }
+        guard exerciseIndex < workout.exercises.count else { return }
+        guard !workout.exercises[exerciseIndex].completedSets.isEmpty else { return }
+        
+        workout.exercises[exerciseIndex].completedSets.removeLast()
+        activeWorkout = workout
+        
+        // Sync to iPhone
+        syncWorkoutToPhone()
+        
+        print("🔄 [WATCH] Last set removed from exercise \(exerciseIndex)")
+    }
+    
+    func removeCompletedSet(exerciseIndex: Int, setIndex: Int) {
+        guard var workout = activeWorkout else { return }
+        guard exerciseIndex < workout.exercises.count else { return }
+        guard setIndex < workout.exercises[exerciseIndex].completedSets.count else { return }
+        
+        workout.exercises[exerciseIndex].completedSets.remove(at: setIndex)
+        activeWorkout = workout
+        
+        // Sync to iPhone
+        syncWorkoutToPhone()
+        
+        print("🔄 [WATCH] Set \(setIndex) removed from exercise \(exerciseIndex)")
+    }
+    
     // MARK: - Rest Timer
     
     func startRestTimer(duration: Int) {

@@ -137,7 +137,8 @@ struct RestTimerOverlay: View {
     private var borderProgressOverlay: some View {
         GeometryReader { proxy in
             ZStack {
-                let progress = max(0, min(1, CGFloat(workoutManager.restTimeRemaining) / maxRestTime))
+                // Progress relativo a 3 mins (180s), no a maxRestTime
+                let progress = max(0, min(1, CGFloat(workoutManager.restTimeRemaining) / 180.0))
                 let lineWidth: CGFloat = 3.5
                 let inset = lineWidth / 2
                 let cornerRadius: CGFloat = 42

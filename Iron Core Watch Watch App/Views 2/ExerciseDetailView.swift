@@ -24,6 +24,8 @@ struct ExerciseDetailView: View {
         self.exercise = exercise
         self.exerciseIndex = exerciseIndex
         _currentExerciseIndex = State(initialValue: exerciseIndex)
+        // Iniciar en el primer set no completado
+        _currentSetIndex = State(initialValue: exercise.completedSets.count)
     }
 
     enum WheelField {
@@ -43,19 +45,22 @@ struct ExerciseDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                     
                 VStack(alignment: .leading, spacing: 4){
-                        Text(exercise.exercise.name)
-                            .font(.system(size: 12))
-                            .fontWeight(.semibold)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        
-                        Text("set \(currentSetIndex + 1)/\(exercise.targetSets)")
-                            .font(.system(size: 10))
-                            .fontWeight(.medium)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        
-                        
+                        if let workout = workoutManager.activeWorkout,
+                           currentExerciseIndex < workout.exercises.count {
+                            let currentExercise = workout.exercises[currentExerciseIndex]
+                            
+                            Text(currentExercise.exercise.name)
+                                .font(.system(size: 12))
+                                .fontWeight(.semibold)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                            
+                            Text("set \(currentSetIndex + 1)/\(currentExercise.targetSets)")
+                                .font(.system(size: 10))
+                                .fontWeight(.medium)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
                     }
                     
                     // Pickers - horizontal layout
@@ -111,13 +116,26 @@ struct ExerciseDetailView: View {
             setupInitialValues()
         }
         .onChange(of: currentExerciseIndex) { _ in
+            // Solo actualizar los valores del picker, NO cambiar currentSetIndex
+            // El currentSetIndex ya se maneja correctamente en nextSet/previousSet/completeSet
             setupInitialValues()
         }
         .sheet(isPresented: $showingExerciseActions) {
             exerciseActionsSheet
         }
         .fullScreenCover(isPresented: $showingRestTimer) {
-            RestTimerOverlay()
+            NavigationStack {
+                RestTimerOverlay()
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Skip") {
+                                workoutManager.skipRest()
+                            }
+                            .foregroundColor(.neonGreen)
+                        }
+                    }
+            }
+            .interactiveDismissDisabled()
         }
     }
 
@@ -153,10 +171,16 @@ struct ExerciseDetailView: View {
                                 lineWidth: focusedWheel == .weight ? 2.5 : 1
                             )
                     )
-                    .focusable(true)
+                    .focusable(true) { isFocused in
+                        if isFocused {
+                            focusedWheel = .weight
+                        }
+                    }
                     .focused($focusedWheel, equals: .weight)
                     .digitalCrownRotation($weightValue, from: 0.0, through: 500.0, by: 2.5, sensitivity: .medium)
-                    .onTapGesture { focusedWheel = .weight }
+                    .onTapGesture { 
+                        focusedWheel = .weight
+                    }
             }
 
             // REPS
@@ -187,10 +211,16 @@ struct ExerciseDetailView: View {
                                 lineWidth: focusedWheel == .reps ? 2.5 : 1
                             )
                     )
-                    .focusable(true)
+                    .focusable(true) { isFocused in
+                        if isFocused {
+                            focusedWheel = .reps
+                        }
+                    }
                     .focused($focusedWheel, equals: .reps)
                     .digitalCrownRotation($repsValue, from: 1.0, through: 99.0, by: 1.0, sensitivity: .medium)
-                    .onTapGesture { focusedWheel = .reps }
+                    .onTapGesture { 
+                        focusedWheel = .reps
+                    }
             }
         }
     }
@@ -234,26 +264,29 @@ struct ExerciseDetailView: View {
                         )
                 }
                 .buttonStyle(.plain)
-                .disabled(currentSetIndex == 0)
-                .opacity(currentSetIndex == 0 ? 0.3 : 1.0)
+                .disabled(currentSetIndex == 0 && currentExerciseIndex == 0)
+                .opacity((currentSetIndex == 0 && currentExerciseIndex == 0) ? 0.3 : 1.0)
                 
-                // Complete Set (checkmark)
+                // Complete Set (checkmark) - con toggle
                 Button(action: completeSet) {
+                    let isCompleted = isCurrentSetCompleted()
                     Image(systemName: "checkmark")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.black)
+                        .foregroundColor(isCompleted ? .white : .black)
                         .frame(maxWidth: .infinity)
                         .frame(height: 38)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.neonGreen, Color.neonGreen.opacity(0.85)],
+                                        colors: isCompleted ? 
+                                            [Color.gray, Color.gray.opacity(0.85)] : 
+                                            [Color.neonGreen, Color.neonGreen.opacity(0.85)],
                                         startPoint: .top,
                                         endPoint: .bottom
                                     )
                                 )
-                                .shadow(color: Color.neonGreen.opacity(0.3), radius: 6, x: 0, y: 2)
+                                .shadow(color: (isCompleted ? Color.gray : Color.neonGreen).opacity(0.3), radius: 6, x: 0, y: 2)
                         )
                         .clipShape(Circle())
                 }
@@ -261,6 +294,12 @@ struct ExerciseDetailView: View {
                 
                 // Next
                 Button(action: nextSet) {
+                    let isLastSetOfLastExercise = {
+                        guard let workout = workoutManager.activeWorkout else { return true }
+                        return currentExerciseIndex >= workout.exercises.count - 1 && 
+                               currentSetIndex >= exercise.targetSets - 1
+                    }()
+                    
                     Image(systemName: "arrow.right")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.white.opacity(0.9))
@@ -276,8 +315,16 @@ struct ExerciseDetailView: View {
                         )
                 }
                 .buttonStyle(.plain)
-                .disabled(currentSetIndex >= exercise.targetSets - 1)
-                .opacity(currentSetIndex >= exercise.targetSets - 1 ? 0.3 : 1.0)
+                .disabled({
+                    guard let workout = workoutManager.activeWorkout else { return true }
+                    return currentExerciseIndex >= workout.exercises.count - 1 && 
+                           currentSetIndex >= exercise.targetSets - 1
+                }())
+                .opacity(({
+                    guard let workout = workoutManager.activeWorkout else { return true }
+                    return currentExerciseIndex >= workout.exercises.count - 1 && 
+                           currentSetIndex >= exercise.targetSets - 1
+                }()) ? 0.3 : 1.0)
             }
             // Add Set button
             Button(action: {
@@ -367,20 +414,37 @@ struct ExerciseDetailView: View {
 
     // MARK: - Helpers
 
+    private func isCurrentSetCompleted() -> Bool {
+        guard let workout = workoutManager.activeWorkout,
+              currentExerciseIndex < workout.exercises.count else { return false }
+        
+        let currentExercise = workout.exercises[currentExerciseIndex]
+        return currentSetIndex < currentExercise.completedSets.count
+    }
+    
     private func setupInitialValues() {
         guard let workout = workoutManager.activeWorkout,
               currentExerciseIndex < workout.exercises.count else { return }
         
         let currentExercise = workout.exercises[currentExerciseIndex]
-        currentSetIndex = currentExercise.completedSets.count
-
+        
+        // NO cambiar currentSetIndex aquí, solo actualizar los valores del picker
         let initialWeight: Double
         let initialReps: Int
 
-        if currentSetIndex > 0, let lastSet = currentExercise.completedSets.last {
+        // Si el set actual ya está completado, usa esos valores
+        if currentSetIndex < currentExercise.completedSets.count {
+            let completedSet = currentExercise.completedSets[currentSetIndex]
+            initialWeight = completedSet.weight
+            initialReps = completedSet.reps
+        }
+        // Si no está completado, usa el último set completado como referencia
+        else if currentExercise.completedSets.count > 0, let lastSet = currentExercise.completedSets.last {
             initialWeight = lastSet.weight
             initialReps = lastSet.reps
-        } else {
+        }
+        // Si no hay sets completados, usa los valores target
+        else {
             initialWeight = currentExercise.targetWeight ?? 0.0
             initialReps = currentExercise.targetReps ?? 10
         }
@@ -396,47 +460,68 @@ struct ExerciseDetailView: View {
               currentExerciseIndex < workout.exercises.count else { return }
         
         let currentExercise = workout.exercises[currentExerciseIndex]
-        workoutManager.completeSet(exerciseIndex: currentExerciseIndex, weight: weightValue, reps: Int(repsValue))
-
-        if currentSetIndex < currentExercise.targetSets - 1 {
-            // Avanzar al siguiente set del mismo ejercicio
-            currentSetIndex += 1
-            
-            // Mostrar rest timer
-            if currentExercise.restTime > 0 {
-                showingRestTimer = true
-            }
+        
+        // Check si este set ya está completado (toggle)
+        let isAlreadyCompleted = currentSetIndex < currentExercise.completedSets.count
+        
+        if isAlreadyCompleted {
+            // Desmarcar: remover ESTE set específico, no el último
+            workoutManager.removeCompletedSet(exerciseIndex: currentExerciseIndex, setIndex: currentSetIndex)
+            // Actualizar valores del picker
+            setupInitialValues()
         } else {
-            // Último set del ejercicio completado
-            if currentExerciseIndex < workout.exercises.count - 1 {
-                // Hay más ejercicios, avanzar al siguiente
-                currentExerciseIndex += 1
+            // Marcar como completado
+            workoutManager.completeSet(exerciseIndex: currentExerciseIndex, weight: weightValue, reps: Int(repsValue))
+            
+            // Mostrar rest timer si aplica ANTES de avanzar
+            let shouldShowRest = currentExercise.restTime > 0
+            
+            // Avanzar al siguiente set o ejercicio
+            if currentSetIndex < currentExercise.targetSets - 1 {
+                // Hay más sets en este ejercicio
+                currentSetIndex += 1
+                setupInitialValues()
                 
-                // Mostrar rest timer antes del siguiente ejercicio
-                if currentExercise.restTime > 0 {
+                if shouldShowRest {
                     showingRestTimer = true
                 }
             } else {
-                // Era el último ejercicio, cerrar
-                dismiss()
+                // Último set del ejercicio completado
+                if currentExerciseIndex < workout.exercises.count - 1 {
+                    // Hay más ejercicios, avanzar al siguiente
+                    currentExerciseIndex += 1
+                    currentSetIndex = 0
+                    setupInitialValues()
+                    
+                    if shouldShowRest {
+                        showingRestTimer = true
+                    }
+                } else {
+                    // Último set del último ejercicio
+                    // NO avanzar currentSetIndex, solo actualizar
+                    setupInitialValues()
+                    
+                    if shouldShowRest {
+                        showingRestTimer = true
+                    }
+                }
             }
         }
     }
 
     private func previousSet() {
-        guard let workout = workoutManager.activeWorkout,
-              currentExerciseIndex < workout.exercises.count else { return }
-        
-        let currentExercise = workout.exercises[currentExerciseIndex]
+        guard let workout = workoutManager.activeWorkout else { return }
         
         if currentSetIndex > 0 {
+            // Retroceder dentro del mismo ejercicio
             currentSetIndex -= 1
-
-            if let previousSet = currentExercise.completedSets[safe: currentSetIndex] {
-                // sync wheels to previous set
-                weightValue = previousSet.weight
-                repsValue = Double(min(max(previousSet.reps, 0), 99))
-            }
+            setupInitialValues()
+        } else if currentExerciseIndex > 0 {
+            // Retroceder al ejercicio anterior
+            currentExerciseIndex -= 1
+            let previousExercise = workout.exercises[currentExerciseIndex]
+            currentSetIndex = previousExercise.targetSets - 1
+            setupInitialValues()
         }
     }
 
@@ -447,7 +532,14 @@ struct ExerciseDetailView: View {
         let currentExercise = workout.exercises[currentExerciseIndex]
         
         if currentSetIndex < currentExercise.targetSets - 1 {
+            // Avanzar al siguiente set del mismo ejercicio
             currentSetIndex += 1
+            setupInitialValues()
+        } else if currentExerciseIndex < workout.exercises.count - 1 {
+            // Si ya estamos en el último set, avanzar al siguiente ejercicio
+            currentExerciseIndex += 1
+            currentSetIndex = 0
+            setupInitialValues()
         }
     }
 }
