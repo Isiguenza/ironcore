@@ -42,7 +42,7 @@ struct ExerciseDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
                 // Picker card
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -97,10 +97,16 @@ struct ExerciseDetailView: View {
                         )
                 )
                 
+                
                 // Action buttons
                 actionButtonsSection
                     .padding(.horizontal, 8)
                 
+                
+                Text("Set options")
+                    .foregroundStyle(.gray)
+                    .font(.caption2)
+                    .padding(.horizontal, 4)
                 // Add Set button
                 addSetButton
                     .padding(.horizontal, 4)
@@ -108,6 +114,12 @@ struct ExerciseDetailView: View {
                 
                 // Set Options button
                 setOptionsButton
+                    .padding(.horizontal, 4)
+                
+                
+                Text("Exercise options")
+                    .foregroundStyle(.gray)
+                    .font(.caption2)
                     .padding(.horizontal, 4)
                 
                 addWorkoutButton
@@ -157,7 +169,7 @@ struct ExerciseDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                VStack(alignment: .leading) {
+                VStack(alignment: .trailing) {
                     HStack(spacing: 4) {
                         Image(systemName: "heart.fill")
                             .font(.system(size: 12))
