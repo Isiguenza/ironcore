@@ -116,10 +116,15 @@ struct ExerciseDetailView: View {
                     .padding(.bottom, 16)
             }
             .padding(.horizontal, 4)
+            .onTapGesture {
+                if activeWheel != nil {
+                    activeWheel = nil
+                }
+            }
         }
         .scrollDisabled(activeWheel != nil)
-        .gesture(
-            DragGesture(minimumDistance: 1)
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 10)
                 .onChanged { value in
                     guard let wheel = activeWheel else { return }
                     let currentY = value.translation.height
