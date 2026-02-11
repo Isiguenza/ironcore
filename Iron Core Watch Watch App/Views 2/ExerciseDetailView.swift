@@ -148,7 +148,8 @@ struct ExerciseDetailView: View {
                 .onEnded { _ in
                     lastDragY = 0
                     dragAccumulator = 0
-                }
+                },
+            including: activeWheel != nil ? .all : .none
         )
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
