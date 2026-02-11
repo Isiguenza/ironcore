@@ -1,4 +1,5 @@
 import SwiftUI
+import WatchKit
 
 struct ExerciseDetailView: View {
     let exercise: ActiveWorkoutExercise
@@ -21,6 +22,8 @@ struct ExerciseDetailView: View {
 
     @State private var activeWheel: WheelField?
     @FocusState private var isCrownFocused: Bool
+    @State private var lastDragY: CGFloat = 0
+    @State private var dragAccumulator: CGFloat = 0
     
     init(exercise: ActiveWorkoutExercise, exerciseIndex: Int) {
         self.exercise = exercise
@@ -114,17 +117,45 @@ struct ExerciseDetailView: View {
             }
             .padding(.horizontal, 4)
         }
+        .scrollDisabled(activeWheel != nil)
+        .gesture(
+            DragGesture(minimumDistance: 1)
+                .onChanged { value in
+                    guard let wheel = activeWheel else { return }
+                    let currentY = value.translation.height
+                    let delta = currentY - lastDragY
+                    lastDragY = currentY
+                    dragAccumulator += delta
+                    
+                    let threshold: CGFloat = 25
+                    if abs(dragAccumulator) >= threshold {
+                        let steps = Int(dragAccumulator / threshold)
+                        dragAccumulator -= CGFloat(steps) * threshold
+                        
+                        if wheel == .weight {
+                            weightValue = roundToHalf(max(0, min(500, weightValue - Double(steps) * 0.5)))
+                        } else {
+                            repsValue = max(1, min(99, repsValue - Double(steps)))
+                        }
+                        WKInterfaceDevice.current().play(.click)
+                    }
+                }
+                .onEnded { _ in
+                    lastDragY = 0
+                    dragAccumulator = 0
+                }
+        )
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                VStack(alignment: .trailing) {
+                VStack(alignment: .leading) {
                     HStack(spacing: 4) {
                         Image(systemName: "heart.fill")
                             .font(.system(size: 12))
                             .foregroundColor(.red)
                             .symbolEffect(.bounce.up.byLayer, options: .repeat(.periodic(delay: 0.4)))
                         Text("\(WatchWorkoutManager.shared.heartRate)")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.red)
                     }
                     
@@ -133,7 +164,7 @@ struct ExerciseDetailView: View {
                             .font(.system(size: 12))
                             .foregroundColor(.orange)
                         Text("\(WatchWorkoutManager.shared.calories)")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.orange)
                     }
                 }
