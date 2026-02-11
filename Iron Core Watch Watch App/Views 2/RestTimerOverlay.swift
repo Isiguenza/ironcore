@@ -59,20 +59,33 @@ struct RestTimerOverlay: View {
 
     private var nextExerciseBlockLarge: some View {
         Group {
-            if let workout = workoutManager.activeWorkout,
-               let currentExercise = workout.exercises.first(where: { $0.completedSets.count < $0.targetSets }) {
-
+            if let workout = workoutManager.activeWorkout {
+                let currentExerciseIndex = workout.exercises.firstIndex(where: { $0.completedSets.count < $0.targetSets }) ?? workout.exercises.count - 1
+                let currentExercise = workout.exercises[currentExerciseIndex]
+                let totalSets = workoutManager.getTotalSets(for: currentExerciseIndex)
+                let nextSetNumber = currentExercise.completedSets.count + 1
+                
                 VStack(spacing: 6) {
                     Text("NEXT")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.gray)
                         .tracking(1.5)
 
-                    Text(currentExercise.exercise.name)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.center)
+                    // Si quedan sets en el ejercicio actual, mostrar ejercicio + set
+                    if currentExercise.completedSets.count < totalSets {
+                        Text("\(currentExercise.exercise.name) - Set \(nextSetNumber)")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        // Si terminó sets, mostrar siguiente ejercicio
+                        Text(currentExercise.exercise.name)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                    }
 
                     if let weight = currentExercise.targetWeight,
                        let reps = currentExercise.targetReps {
