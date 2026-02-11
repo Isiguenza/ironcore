@@ -103,19 +103,22 @@ struct ExerciseDetailView: View {
                 
                 // Add Set button
                 addSetButton
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 4)
                     .padding(.top, 4)
                 
                 // Set Options button
                 setOptionsButton
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 4)
+                
+                addWorkoutButton
+                    .padding(.horizontal, 4)
+                    .padding(.top, 4)
                 
                 // Exercise Options button
                 exerciseOptionsButton
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 4)
                     .padding(.bottom, 16)
             }
-            .padding(.horizontal, 4)
             .onTapGesture {
                 if activeWheel != nil {
                     activeWheel = nil
@@ -398,20 +401,44 @@ struct ExerciseDetailView: View {
                 Text("Add Set")
                     .font(.system(size: 15, weight: .bold))
             }
-            .foregroundColor(.white)
+            .foregroundColor(.black)
             .frame(maxWidth: .infinity)
             .frame(height: 44)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(white: 0.16))
+                    .fill(Color.neonGreen)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                            .stroke(Color.neonGreen.opacity(0.12), lineWidth: 1)
                     )
             )
         }
         .buttonStyle(.plain)
     }
+    
+    private var addWorkoutButton: some View {
+        Button(action: addSet) {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                Text("Add Exercise")
+                    .font(.system(size: 15, weight: .bold))
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.blue)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.blue.opacity(0.12), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     
     private var setOptionsButton: some View {
         Button(action: { showingSetOptions = true }) {
@@ -460,110 +487,92 @@ struct ExerciseDetailView: View {
     }
 
     private var setOptionsSheet: some View {
-        VStack(spacing: 16) {
-            Text("Set Options")
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.top)
-
+        VStack(spacing: 10) {
+            
+        
+            
             Button(action: {
                 showingSetOptions = false
                 deleteCurrentSet()
             }) {
-                HStack {
+                HStack(spacing: 8) {
                     Image(systemName: "trash")
+                        .font(.system(size: 17, weight: .semibold))
                     Text("Delete Set")
+                        .font(.system(size: 15, weight: .bold))
                 }
-                .foregroundColor(.red)
+                .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(white: 0.16))
-                .cornerRadius(12)
+                .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.red.opacity(0.5))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                        )
+                )
             }
             .buttonStyle(.plain)
             
-            Button(action: {
-                showingSetOptions = false
-            }) {
-                Text("Cancel")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(white: 0.12))
-                    .cornerRadius(12)
-            }
-            .buttonStyle(.plain)
+     
         }
+        .navigationTitle("Set Options")
         .padding()
-        .background(Color.black)
     }
     
     private var exerciseActionsSheet: some View {
-        VStack(spacing: 16) {
-            Text("Exercise Options")
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.top)
-
-            Button(action: {
-                showingExerciseActions = false
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle")
-                    Text("Add Exercise")
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(white: 0.16))
-                .cornerRadius(12)
-            }
-            .buttonStyle(.plain)
-            
-            Button(action: {
-                showingExerciseActions = false
-            }) {
-                HStack {
+        VStack(spacing: 10) {
+ 
+            Button(action: {  }) {
+                HStack(spacing: 8) {
                     Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 17, weight: .semibold))
                     Text("Replace Exercise")
+                        .font(.system(size: 15, weight: .bold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(white: 0.16))
-                .cornerRadius(12)
-            }
-            .buttonStyle(.plain)
-
-            Button(action: {
-                showingExerciseActions = false
-            }) {
-                HStack {
-                    Image(systemName: "trash")
-                    Text("Delete Exercise")
-                }
-                .foregroundColor(.red)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(white: 0.16))
-                .cornerRadius(12)
+                .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(white: 0.16).opacity(0.5))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                        )
+                )
             }
             .buttonStyle(.plain)
             
-            Button(action: {
-                showingExerciseActions = false
-            }) {
-                Text("Cancel")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(white: 0.12))
-                    .cornerRadius(12)
+            
+            Button(action: {  }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 17, weight: .semibold))
+                    Text("Delete Exercise")
+                        .font(.system(size: 15, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.red.opacity(0.5))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                        )
+                )
             }
             .buttonStyle(.plain)
+            
+           
+
+            
         }
+        .navigationTitle("Exercise Options")
         .padding()
-        .background(Color.black)
     }
     
     private func deleteCurrentSet() {
